@@ -5,7 +5,7 @@ import SearchForm from "@/app/ui/search-form";
 
 export default async function Home({searchParams}: { searchParams?: { query?: string } }) {
 
-    const query = searchParams?.query || 'Downtown Binary';
+    const query = searchParams?.query || 'Downtown Binary'; //hay que mejorar el manejo de errores
     const artista: Artist = await getData(query);
 
     return (
