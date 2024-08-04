@@ -1,5 +1,7 @@
 'use server'
 
+import {Artist, ArtistsResponse, RelatedResponse} from "@/app/lib/definiciones";
+
 async function getToken(): Promise<String> {
 
     const basicAuth = Buffer.from(
@@ -24,17 +26,32 @@ async function getToken(): Promise<String> {
 }
 
 
-export async function getData(req: string | undefined): Promise<Artist> {
-    const artista = req
+export async function getArtist(req: string | undefined): Promise<Artist | undefined> {
+
+    if (req) {
+
+        const token = await getToken();
+
+        const response = await fetch(`https://api.spotify.com/v1/search?q=${req}&type=artist`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+
+        });
+        const data: ArtistsResponse = await response.json();
+        return data.artists.items[0]
+
+    } else return undefined;
+}
+
+export async function getRelated(id: string): Promise<RelatedResponse> {
+
     const token = await getToken();
 
-    const response = await fetch(`https://api.spotify.com/v1/search?q=${artista}&type=artist`, {
+    const response = await fetch(`https://api.spotify.com/v1/artists/${id}/related-artists`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-
     });
-    const data: ArtistsResponse = await response.json();
-    return data.artists.items[0]
-
+    return await response.json()
 }
