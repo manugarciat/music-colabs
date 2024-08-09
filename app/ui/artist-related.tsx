@@ -1,20 +1,32 @@
+'use server'
+
 import React from 'react'
-import {getRelated} from "@/app/lib/data";
+import {searchArtist, getRelated, getRelatedArtists2nds} from "@/app/lib/data";
+import {Artist, ArtistsResponse} from "@/app/lib/definiciones";
 
-export default async function ArtistRelated({id}: { id: string | undefined }) {
+export default async function ArtistRelated({query}: { query: string | undefined }) {
 
-    if (!id) return null
+    if (!query) return null
 
-    const response = await getRelated(id)
-    const artistas = response.artists
+    const response: ArtistsResponse = await searchArtist(query);
 
-    return (
-        <div>
-            <ul>
-                {/*{JSON.stringify(artistas)}*/}
-                {artistas.map(artista => (<li key={artista.id}>{artista.name}</li>))}
+    if (response.artists) {
+        const artista = response.artists.items[0]
 
-            </ul>
-        </div>
-    )
+        if (artista) {
+          const todos = await getRelatedArtists2nds(artista)
+
+            // todos_resultado.push(artista)
+
+            return (
+                <div>
+                    <ul>
+                        {/*{JSON.stringify(artistas)}*/}
+                        {todos.map(artista => (<li key={artista.id}>{artista.name}</li>))}
+
+                    </ul>
+                </div>
+            )
+        }
+    }
 }

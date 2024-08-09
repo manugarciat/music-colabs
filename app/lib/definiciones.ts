@@ -7,6 +7,7 @@ export type ArtistImage = {
 };
 
 export type Artist = {
+    grupo: number;
     external_urls: {
         spotify: string;
     }
@@ -30,72 +31,68 @@ export type RelatedResponse = {
     artists: Artist[];
 }
 
-export type Arista = {
-    from: String;
-    target: String;
-    value: number;
-}
+// Datos del grafo
+// const nodes: Nodem[] = [
+//     {
+//         id: 1,
+//         group: '',
+//         imagen: ''
+//     },
+//     {
+//         id: 2,
+//         group: '',
+//         imagen: ''
+//     },
+//     {
+//         id: 3,
+//         group: '',
+//         imagen: ''
+//     },
+//     {
+//         id: 4,
+//         group: '',
+//         imagen: ''
+//     }
+// ];
+//
+// const links: Linkm[] = [
+//     {
+//         source: 1, target: 2,
+//         value: 0
+//     },
+//     {
+//         source: 2, target: 3,
+//         value: 0
+//     },
+//     {
+//         source: 3, target: 4,
+//         value: 0
+//     },
+//     {
+//         source: 4, target: 1,
+//         value: 0
+//     }
+// ];
 
-export type Grafo = {
-    nodes: Artist[]
-    links: Arista[]
-}
-
-export interface Node extends SimulationNodeDatum {
+export interface Nodo {//extends SimulationNodeDatum {
+    grupo: number;
+    external_urls: {
+        spotify: string;
+    }
     id: string;
-    group: string;
+    name: string;
+    images: ArtistImage[];
+    genres: string[];
+    popularity: number;
 }
 
-export interface Link extends SimulationLinkDatum<Node> {
+export interface Arista {//extends SimulationLinkDatum<Nodem> {
     source: string;
     target: string;
     value: number;
 }
 
-export type Data = {
-    nodes: Node[];
-    links: Link[];
-};
-
-export const data = {
-    nodes: [
-        { id: 'Myriel', group: 'team1' },
-        { id: 'Anne', group: 'team1' },
-        { id: 'Gabriel', group: 'team1' },
-        { id: 'Mel', group: 'team1' },
-        { id: 'Yan', group: 'team2' },
-        { id: 'Tom', group: 'team2' },
-        { id: 'Cyril', group: 'team2' },
-        { id: 'Tuck', group: 'team2' },
-        { id: 'Antoine', group: 'team3' },
-        { id: 'Rob', group: 'team3' },
-        { id: 'Napoleon', group: 'team3' },
-        { id: 'Toto', group: 'team4' },
-        { id: 'Tutu', group: 'team4' },
-        { id: 'Titi', group: 'team4' },
-        { id: 'Tata', group: 'team4' },
-        { id: 'Turlututu', group: 'team4' },
-        { id: 'Tita', group: 'team4' },
-    ],
-    links: [
-        { source: 'Anne', target: 'Myriel', value: 1 },
-        { source: 'Napoleon', target: 'Myriel', value: 1 },
-        { source: 'Gabriel', target: 'Myriel', value: 1 },
-        { source: 'Mel', target: 'Myriel', value: 1 },
-        { source: 'Yan', target: 'Tom', value: 1 },
-        { source: 'Tom', target: 'Cyril', value: 1 },
-        { source: 'Tuck', target: 'Myriel', value: 1 },
-        { source: 'Tuck', target: 'Mel', value: 1 },
-        { source: 'Tuck', target: 'Myriel', value: 1 },
-        { source: 'Mel', target: 'Myriel', value: 1 },
-        { source: 'Rob', target: 'Antoine', value: 1 },
-        { source: 'Tata', target: 'Tutu', value: 1 },
-        { source: 'Tata', target: 'Titi', value: 1 },
-        { source: 'Tata', target: 'Toto', value: 1 },
-        { source: 'Tata', target: 'Tita', value: 1 },
-        { source: 'Tita', target: 'Toto', value: 1 },
-        { source: 'Tita', target: 'Titi', value: 1 },
-        { source: 'Tita', target: 'Turlututu', value: 1 },
-        { source: 'Rob', target: 'Turlututu', value: 1 },
-    ],
+export type Grafo = {
+    nodes: Nodo[];
+    links: Arista[];
 };
