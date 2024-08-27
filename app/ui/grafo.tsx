@@ -22,7 +22,7 @@ export default function GraphComponent({...props}: GraphComponentProps
         const width = 1280;
         const height = 1080;
 
-        const color = d3.scaleOrdinal(d3.schemeObservable10);
+        const color = d3.scaleOrdinal(d3.schemeCategory10);
         const minimo = d3.min(nodes!, d => d.popularity)
         const maximo = d3.max(nodes!, d => d.popularity)
 
