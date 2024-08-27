@@ -30,6 +30,6 @@ export default async function ArtistCard({query}: { query: string | undefined })
         }
 
     } else {
-        return <div>Busca un artista</div>;
+        return <div> </div>;
     }
 }

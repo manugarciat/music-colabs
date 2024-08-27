@@ -4,6 +4,7 @@ import {getRelatedArtists2nds, makeGrafo, searchArtist} from "@/app/lib/data";
 import GraphComponent from "@/app/ui/grafo";
 
 export default async function GraphCard({query}: { query: string | undefined }) {
+
     if (!query) return null
 
     const response: ArtistsResponse = await searchArtist(query);

@@ -19,19 +19,12 @@ export default function GraphComponent({...props}: GraphComponentProps
 
 
     useEffect(() => {
-        const width = 1920;
+        const width = 1280;
         const height = 1080;
 
         const color = d3.scaleOrdinal(d3.schemeObservable10);
         const minimo = d3.min(nodes!, d => d.popularity)
         const maximo = d3.max(nodes!, d => d.popularity)
-        //const hola = nodes.filter(d => d.popularity > 60)
-
-        // const zoomHandler = zoom()
-        //     .on("zoom", (e) => {
-        //         console.log(e);
-        //         svg.attr("transform", e.transform)
-        //     });
 
         const rScale = d3.scalePow().exponent(2).domain([minimo!, maximo!]).range([2, 9]);
 
@@ -39,7 +32,7 @@ export default function GraphComponent({...props}: GraphComponentProps
         const svg = d3.select(svgRef.current)
             .attr('width', "1920px")
             .attr('height', "1080px")
-            // .call(zoomHandler)
+        // .call(zoomHandler)
 
         // esto lo agregué para que no se duplique:
         svg.selectAll("g").remove()
@@ -63,7 +56,6 @@ export default function GraphComponent({...props}: GraphComponentProps
             .attr('stroke', '#a8a8a8')
             .attr('stroke-width', .5)
             .attr('opacity', 0.2)
-
 
         // Dibujar nodos
         const node = svg.append('g')
@@ -107,8 +99,8 @@ export default function GraphComponent({...props}: GraphComponentProps
             //.attr("width", tooltipWidth)
             .attr("fill", "white")
             .style("font-weight", 200)
-            .style("font-size", 12);
-
+            .style("font-size", 12)
+            .style("user-select", "none");
 
 
         svg.selectAll("circle")
@@ -126,8 +118,9 @@ export default function GraphComponent({...props}: GraphComponentProps
                 const cx = e.target.getAttribute("cx");
                 const cy = e.target.getAttribute("cy");
                 // console.log(cx, cy);
+
                 d3.select(".tooltip")
-                    .attr("transform", `translate(${cx - 0.5*tooltipWidth}, ${cy - tooltipHeight -50})`)
+                    .attr("transform", `translate(${cx - 0.5 * tooltipWidth}, ${cy - tooltipHeight - 30})`)
                     .transition()
                     .duration(200)
                     .style("opacity", 1);
@@ -140,8 +133,12 @@ export default function GraphComponent({...props}: GraphComponentProps
                     .transition()
                     .duration(200)
                     .style("opacity", 0)
-                    //.attr("transform", `translate(0, 500)`);
+                //.attr("transform", `translate(0, 500)`);
 
+            })
+            .on("mousedown", (e, d) => {
+                d3.select(".tooltip")
+                    .style("opacity", 0)
             });
 
 
@@ -161,7 +158,6 @@ export default function GraphComponent({...props}: GraphComponentProps
             node
                 .attr('cx', d => d.x)
                 .attr('cy', d => d.y);
-
 
 
         });
