@@ -1,6 +1,6 @@
 'use server'
 
-import {Artist, ArtistsResponse, Grafo, Arista, Nodo, RelatedResponse} from "@/app/lib/definiciones";
+import {Artist, ArtistsResponse, Grafo, Arista, Nodo, RelatedResponse} from "@/lib/definiciones";
 
 async function getToken(): Promise<String> {
 
@@ -33,6 +33,7 @@ export async function searchArtist(req: string): Promise<ArtistsResponse> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
+        next: { revalidate: 3600 }
     });
     return await response.json()
 
@@ -46,6 +47,7 @@ export async function getRelated(id: string): Promise<RelatedResponse> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
+        next: { revalidate: 3600 }
     });
     return await response.json()
 }

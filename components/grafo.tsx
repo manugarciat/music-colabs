@@ -2,7 +2,7 @@
 
 import React, {useRef, useEffect} from 'react';
 import * as d3 from 'd3';
-import {Artist, Arista, Nodo} from "@/app/lib/definiciones";
+import {Arista, Nodo} from "@/lib/definiciones";
 import {SimulationLinkDatum, SimulationNodeDatum} from "d3";
 
 
@@ -17,16 +17,15 @@ export default function GraphComponent({...props}: GraphComponentProps
     const links = props.links
     const svgRef = useRef(null);
 
-
     useEffect(() => {
         const width = 1280;
         const height = 1080;
 
-        const color = d3.scaleOrdinal(d3.schemeCategory10);
+        const color = d3.scaleOrdinal(d3.schemeTableau10);
         const minimo = d3.min(nodes!, d => d.popularity)
         const maximo = d3.max(nodes!, d => d.popularity)
 
-        const rScale = d3.scalePow().exponent(2).domain([minimo!, maximo!]).range([2, 12]);
+        const rScale = d3.scalePow().exponent(2).domain([minimo!, maximo!]).range([3, 16]);
 
         // Crear el SVG
         const svg = d3.select(svgRef.current)
@@ -45,8 +44,11 @@ export default function GraphComponent({...props}: GraphComponentProps
         // Definir la simulación
         const simulation = d3.forceSimulation<Nodo>(nodes)
             .force('link', d3.forceLink<Nodo, Arista>(links).id((d: Nodo) => d.id).distance(40))
-            .force('charge', d3.forceManyBody().strength(-120))
-            .force('center', d3.forceCenter(width / 2, height / 2));
+            .force('charge', d3.forceManyBody().strength(-180))
+            .force('center', d3.forceCenter(width / 2, height / 2))
+            .force('collide', d3.forceCollide<Nodo>(d => rScale(d.popularity) + 6))
+            .force('radial', d3.forceRadial(100, width / 2, height / 2).strength(0.20))
+            .alphaMin(0.001);
 
         // Dibujar enlaces
         const link = svg.append('g')
@@ -91,7 +93,7 @@ export default function GraphComponent({...props}: GraphComponentProps
 
         tooltip
             .append("text")
-            .text("HOLA")
+            .text("")
             .attr("x", 2)
             .attr("y", tooltipHeight - 20)
             //.attr("text-anchor", "center")
@@ -104,39 +106,34 @@ export default function GraphComponent({...props}: GraphComponentProps
 
 
         svg.selectAll<SVGCircleElement, Nodo>("circle")
-            .on("mouseenter", (e: MouseEvent, d: Nodo) => {
+            .on("mouseover", (e, d) => {
                 console.log("DOM event", e);
                 console.log("Attached datum", d);
 
                 // Update the text in the tooltip
-                // @ts-ignore
                 d3.select(".tooltip text")
-                    .text(String(d.name));
-                // @ts-ignore
+                    .text(d.name);
+
                 d3.select(".tooltip image")
                     .attr("xlink:href", d.images[1].url)
 
                 // Position the tooltip above the hovered circle
-                const cx = (e.target as SVGCircleElement).getAttribute("cx") ?? "0";
-                const cy = (e.target as SVGCircleElement).getAttribute("cy") ?? "0";
+                const cx = parseFloat((e.target).getAttribute("cx"));
+                const cy = parseFloat((e.target).getAttribute("cy"));
                 // console.log(cx, cy);
 
                 d3.select(".tooltip")
-                    .attr("transform", `translate(${parseFloat(cx) - 0.5 * tooltipWidth}, ${parseFloat(cy) - tooltipHeight - 30})`)
-                    .transition()
+                    .attr("transform", `translate(${cx - 0.5 * tooltipWidth}, ${cy - tooltipHeight - 30})`)
+                    .transition("opacidad")
                     .duration(200)
                     .style("opacity", 1);
-
             })
             .on("mouseleave", (e, d) => {
-
                 // Hide the tooltip and move it away from the chart.
                 d3.select(".tooltip")
-                    .transition()
+                    .transition("opacidad")
                     .duration(200)
                     .style("opacity", 0)
-                //.attr("transform", `translate(0, 500)`);
-
             })
             .on("mousedown", (e, d) => {
                 d3.select(".tooltip")
@@ -150,7 +147,7 @@ export default function GraphComponent({...props}: GraphComponentProps
 
         node.call(dragBehavior)
 
-        // simulation.on('tick')
+
         // Actualizar posiciones en cada tick de la simulación
         simulation.on('tick', () => {
             link

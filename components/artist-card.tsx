@@ -2,8 +2,8 @@
 
 import React from 'react'
 import Image from "next/image";
-import {Artist, ArtistsResponse} from "@/app/lib/definiciones";
-import {searchArtist} from "@/app/lib/data";
+import {Artist, ArtistsResponse} from "@/lib/definiciones";
+import {searchArtist} from "@/lib/data";
 
 export default async function ArtistCard({query}: { query: string | undefined }) {
 
@@ -14,14 +14,14 @@ export default async function ArtistCard({query}: { query: string | undefined })
 
             const artista = response.artists.items[0]
             return (
-                <div className="mt-10">
+                <div className="mt-10 pt-5 border rounded-sm text-card-foreground bg-card shadow-sm">
                     <div className="text-4xl font-extrabold m-1 text-center"> {artista?.name} </div>
-                    <p className="mb-3 text-xs text-center text-[#aaaaaa]"> id: {artista!.id}</p>
+                    <p className="mb-3 text-xs text-center"> id: {artista!.id}</p>
                     <Image src={artista!.images[0].url} alt="hola" width={artista?.images[0].width}
-                           height={artista?.images[0].height} className="rounded-sm"/>
+                           height={artista?.images[0].height} />
                     <div className="m-5">
 
-                        {artista.genres.map(genero => <div key={genero} className="text-[#aaaaaa]"> {genero} </div>)}
+                        {artista.genres.map(genero => <div key={genero} > {genero} </div>)}
                     </div>
                 </div>
             )

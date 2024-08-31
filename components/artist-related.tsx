@@ -1,8 +1,8 @@
 'use server'
 
 import React from 'react'
-import {searchArtist, getRelated, getRelatedArtists2nds} from "@/app/lib/data";
-import {Artist, ArtistsResponse} from "@/app/lib/definiciones";
+import {searchArtist, getRelated, getRelatedArtists2nds} from "@/lib/data";
+import {Artist, ArtistsResponse} from "@/lib/definiciones";
 
 export default async function ArtistRelated({query}: { query: string | undefined }) {
 
