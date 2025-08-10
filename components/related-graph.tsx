@@ -1,5 +1,5 @@
 import {ArtistsResponse} from "@/lib/definiciones";
-import {makeGrafo, makeGrafo2, makeGrafoColabs, searchArtist} from "@/lib/data";
+import {makeGrafoColabs, searchArtist} from "@/lib/data";
 import GraphComponent from "@/components/grafo";
 
 export default async function RelatedGraph({query}: { query: string | undefined }) {
@@ -13,7 +13,8 @@ export default async function RelatedGraph({query}: { query: string | undefined 
         const artista = response.artists.items[0]
 
         if (artista) {
-            const grafo_colabs = await makeGrafo2(artista)
+            // const grafo_colabs = await makeGrafo2(artista)
+            const grafo_colabs = await makeGrafoColabs(artista)
 
             return (
                 <div>
