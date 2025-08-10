@@ -4,6 +4,7 @@ import React, {useRef, useEffect} from 'react';
 import * as d3 from 'd3';
 import {Arista, Nodo} from "@/lib/definiciones";
 import {SimulationLinkDatum, SimulationNodeDatum} from "d3";
+import {Graph} from "graphlib";
 
 
 interface GraphComponentProps {
