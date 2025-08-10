@@ -27,10 +27,22 @@ export type ArtistsResponse = {
     };
 }
 
+export type Album = {
+    id: String
+}
+
+export type Track = {
+    id: String;
+    artists: Artist[];
+
+}
+
 export type AlbumsResponse = {
-    items: {
-        id: String;
-    };
+    items: Album[]
+}
+
+export type AlbumTracksResponse = {
+    items: Track[];
 }
 
 export type RelatedResponse = {
@@ -52,12 +64,12 @@ export interface Nodo extends SimulationNodeDatum {//extends SimulationNodeDatum
 export interface Arista extends SimulationLinkDatum<Nodo> {
     source: string;
     target: string;
-    value: number;
+    //value: number;
 }
 
 export type Grafo = {
-    nodes: Nodo[];
-    links: Arista[];
+    nodos: Nodo[];
+    aristas: Arista[];
 };
 
 

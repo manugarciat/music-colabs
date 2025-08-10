@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Red de Colaboraciones Musicales
 
-## Getting Started
+https://music-colabs.vercel.app/
 
-First, run the development server:
+Una aplicación web interactiva que visualiza la red de colaboraciones entre artistas musicales utilizando la API de Spotify y D3.js. Descubre las conexiones ocultas entre tus músicos favoritos con un grafo dinámico de hasta dos grados de separación.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ⚡️ Características
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+-   [x] **Búsqueda de Artistas:** Encuentra cualquier artista disponible en la base de datos de Spotify.
+-   [x] **Visualización en Grafo:** Muestra al artista principal, sus colaboradores directos (1er grado) y los colaboradores de estos (2do grado).
+-   [x] **Renderizado de Alto Rendimiento:** Utiliza **HTML Canvas** para renderizar grafos con cientos de nodos de forma fluida y sin caídas de rendimiento.
+-   [x] **Grafo Interactivo:** Arrastra los nodos para explorar la red a tu gusto.
+-   [x] **Tooltips Informativos:** Pasa el ratón sobre cualquier artista para ver su foto, nombre y nivel de popularidad.
+-   [x] **Diseño Moderno:** Interfaz limpia y responsiva construida con Next.js y Tailwind CSS.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Tecnologías Utilizadas
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+-   **Framework:** [Next.js](https://nextjs.org/) (React)
+-   **Lenguaje:** [TypeScript](https://www.typescriptlang.org/)
+-   **Visualización de Datos:** [D3.js](https://d3js.org/) (`d3-force`, `d3-scale`)
+-   **Estilos:** [Tailwind CSS](https://tailwindcss.com/)
+-   **API:** [Spotify Web API](https://developer.spotify.com/documentation/web-api)
+-   **Deployment:** [Vercel](https://vercel.com/)
 
-## Learn More
+## 🚀 Cómo Ejecutarlo en Local
 
-To learn more about Next.js, take a look at the following resources:
+Para clonar y ejecutar este proyecto en tu máquina, sigue estos pasos:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1.  **Clona el repositorio:**
+    ```bash
+    git clone https://github.com/tu-usuario/music-colabs.git
+    cd music-colabs
+    ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+2.  **Instala las dependencias:**
+    Se recomienda usar `pnpm`.
+    ```bash
+    pnpm install
+    ```
 
-## Deploy on Vercel
+3.  **Configura las variables de entorno:**
+    Necesitas obtener tus propias credenciales de la API de Spotify desde el [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+    Crea un archivo llamado `.env.local` en la raíz del proyecto y añade tus credenciales:
+    ```
+    SPOTIFY_CLIENT_ID=tu_client_id_de_spotify
+    SPOTIFY_CLIENT_SECRET=tu_client_secret_de_spotify
+    ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4.  **Inicia el servidor de desarrollo:**
+    ```bash
+    pnpm dev
+    ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+5.  Abre [http://localhost:3000](http://localhost:3000) en tu navegador para ver la aplicación.
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT.
