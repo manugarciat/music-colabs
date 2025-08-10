@@ -59,7 +59,19 @@ export async function getRelated(id: string): Promise<RelatedResponse> {
         },
         next: {revalidate: 3600}
     });
-    return response.json()
+
+    if (!response.ok) {
+        // Si la respuesta no es exitosa, imprime el error y devuelve un arreglo vacío.
+        try {
+            const error = await response.json();
+            console.error("Error en la API de Spotify al obtener artistas relacionados:", error);
+        } catch (e) {
+            console.error("Error en la API de Spotify al obtener artistas relacionados:", response.statusText);
+        }
+        return { artists: [] }; // Devuelve un objeto con un arreglo de artistas vacío
+    }
+
+    return response.json();
 }
 
 export async function getAlbums(id: string): Promise<AlbumsResponse> {
