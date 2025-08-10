@@ -6,18 +6,18 @@ import ArtistCard from "@/components/artist-card";
 import GraphCard from "@/components/graph-card";
 import {Grid} from 'react-loading-icons'
 
-// 1. Definimos una interfaz/tipo para las props. Esta es la forma canónica.
-//    Cubre tanto los parámetros de ruta (params) como los de búsqueda (searchParams).
+// 1. Esta es la definición de tipos MÁS ROBUSTA para una página de Next.js
+//    Cubre cualquier parámetro de ruta y cualquier parámetro de búsqueda.
 type Props = {
-  searchParams?: {
-    query?: string;
-  };
+  params: { [key: string]: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 };
 
-// 2. Usamos este nuevo tipo para las props de tu componente Home.
 export default async function Home({ searchParams }: Props) {
 
-    const query = searchParams?.query;
+    // 2. Ahora, extraemos 'query' de este objeto genérico.
+    //    Tenemos que asegurarnos de que es un string, ya que podría ser un array.
+    const query = Array.isArray(searchParams.query) ? searchParams.query[0] : searchParams.query;
 
     return (
         <main className="flex flex-row">
