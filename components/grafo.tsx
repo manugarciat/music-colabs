@@ -1,17 +1,26 @@
 'use client'
 
-import React, {useRef, useEffect} from 'react';
+import React, {useRef, useEffect, useState} from 'react';
 import * as d3 from 'd3';
 import {Arista, Nodo} from "@/lib/definiciones";
+import Image from 'next/image';
 
 interface GraphComponentProps {
     nodes?: Nodo[],
     links?: Arista[],
 }
 
+interface TooltipData {
+    x: number;
+    y: number;
+    visible: boolean;
+    node: Nodo | null;
+}
+
 export default function GraphComponent({...props}: GraphComponentProps) {
-    const { nodes, links } = props;
+    const {nodes, links} = props;
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const [tooltip, setTooltip] = useState<TooltipData>({x: 0, y: 0, visible: false, node: null});
 
     useEffect(() => {
         if (!nodes || !links || !canvasRef.current) return;
@@ -81,7 +90,7 @@ export default function GraphComponent({...props}: GraphComponentProps) {
             .container(canvas)
             .subject((event) => {
                 // simulation.find puede devolver undefined, el tipo del subject es Nodo | undefined
-                return simulation.find(event.x, event.y, 30);
+                return simulation.find(event.x, event.y, 12);
             })
             .on('start', (event) => {
                 if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -108,7 +117,52 @@ export default function GraphComponent({...props}: GraphComponentProps) {
         // Aplicamos el comportamiento de drag al canvas
         d3.select(canvas).call(dragBehavior);
 
+        d3.select(canvas)
+            .on('mousemove', (event) => {
+                const [x, y] = d3.pointer(event);
+                const node = simulation.find(x, y, 12); // Busca un nodo en un radio de 30px
+
+                setTooltip({
+                    visible: !!node, // visible es true si encontramos un nodo, si no, es false
+                    node: node || null,
+                    x: event.pageX, // Usamos pageX/Y para la posición absoluta del div
+                    y: event.pageY
+                });
+            })
+            .on('mouseleave', () => {
+                // Ocultamos el tooltip cuando el ratón sale del canvas
+                setTooltip((prev: any) => ({...prev, visible: false}));
+            });
+
     }, [links, nodes]);
 
-    return <canvas ref={canvasRef}></canvas>;
+    return (
+        <>
+            <canvas ref={canvasRef}></canvas>
+            {tooltip.visible && tooltip.node && (
+                <div
+                    className="graph-tooltip"
+                    style={{
+                        opacity: 1, // Hacemos visible el div
+                        position: 'absolute', // Aseguramos que es absoluto
+                        top: `${tooltip.y + 15}px`, // Lo posicionamos debajo del cursor
+                        left: `${tooltip.x + 15}px`,
+                    }}
+                >
+                    {/* El contenido del tooltip se renderiza con React */}
+                    {/* Comprobamos que la imagen exista antes de renderizarla */}
+                    {tooltip.node.images[1] && (
+                        <Image
+                            src={tooltip.node.images[1].url}
+                            alt={tooltip.node.name}
+                            width={tooltip.node.images[1].width}
+                            height={tooltip.node.images[1].height}
+                        />
+                    )}
+                    <strong>{tooltip.node.name}</strong>
+                    <p>Popularidad: {tooltip.node.popularity}</p>
+                </div>
+            )}
+        </>
+    );
 };

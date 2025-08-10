@@ -89,6 +89,35 @@
 }
 
 
+.graph-tooltip {
+  position: absolute;
+  background-color: rgba(20, 20, 20, 0.85);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  pointer-events: none; /* MUY IMPORTANTE: para que el tooltip no interfiera con el ratón */
+  transition: opacity 0.2s ease-in-out;
+  z-index: 10;
+  max-width: 160px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.graph-tooltip img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.graph-tooltip strong {
+  font-weight: 600;
+  display: block;
+}
+
 
 
 
