@@ -28,7 +28,7 @@ Para clonar y ejecutar este proyecto en tu máquina, sigue estos pasos:
 
 1.  **Clona el repositorio:**
     ```bash
-    git clone https://github.com/tu-usuario/music-colabs.git
+    git clone https://github.com/manugarciat/music-colabs.git
     cd music-colabs
     ```
 
@@ -39,7 +39,7 @@ Para clonar y ejecutar este proyecto en tu máquina, sigue estos pasos:
     ```
 
 3.  **Configura las variables de entorno:**
-    Necesitas obtener tus propias credenciales de la API de Spotify desde el [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+    Necesitas obtener tus propias credenciales de la API de Spotify desde el [Spotify Developer](https://developer.spotify.com/).
     Crea un archivo llamado `.env.local` en la raíz del proyecto y añade tus credenciales:
     ```
     SPOTIFY_CLIENT_ID=tu_client_id_de_spotify
