@@ -6,11 +6,18 @@ import ArtistCard from "@/components/artist-card";
 import GraphCard from "@/components/graph-card";
 import {Grid} from 'react-loading-icons'
 
-// 1. Cambiamos un poco la definición del tipo para que no sea opcional
-export default async function Home({searchParams}: { searchParams: { query?: string } }) {
+// 1. Definimos una interfaz/tipo para las props. Esta es la forma canónica.
+//    Cubre tanto los parámetros de ruta (params) como los de búsqueda (searchParams).
+type Props = {
+  searchParams?: {
+    query?: string;
+  };
+};
 
-    // 2. Accedemos a la query de forma más directa.
-    const query = searchParams.query;
+// 2. Usamos este nuevo tipo para las props de tu componente Home.
+export default async function Home({ searchParams }: Props) {
+
+    const query = searchParams?.query;
 
     return (
         <main className="flex flex-row">
@@ -19,7 +26,6 @@ export default async function Home({searchParams}: { searchParams: { query?: str
                 <ArtistCard query={query}/>
             </div>
             <div className="m-5 ml-0 w-[1280px] h-[1080px]">
-
                 <Suspense key={query} fallback={<div className="text-center p-10 text">Cargando...
                     <Grid fill="#000000"/></div>}>
                     <GraphCard query={query}/>
