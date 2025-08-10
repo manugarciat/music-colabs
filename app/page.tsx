@@ -6,18 +6,9 @@ import ArtistCard from "@/components/artist-card";
 import GraphCard from "@/components/graph-card";
 import {Grid} from 'react-loading-icons'
 
-// 1. Esta es la definición de tipos MÁS ROBUSTA para una página de Next.js
-//    Cubre cualquier parámetro de ruta y cualquier parámetro de búsqueda.
-type Props = {
-  params: { [key: string]: string };
-  searchParams: { [key: string]: string | string[] | undefined };
-};
-
-export default async function Home({ searchParams }: Props) {
-
-    // 2. Ahora, extraemos 'query' de este objeto genérico.
-    //    Tenemos que asegurarnos de que es un string, ya que podría ser un array.
-    const query = Array.isArray(searchParams.query) ? searchParams.query[0] : searchParams.query;
+export default async function Home({ searchParams }: { searchParams: Promise<{ query?: string | undefined }> }) {
+      const resolvedSearchParams = await searchParams;
+      const query = resolvedSearchParams.query;
 
     return (
         <main className="flex flex-row">
