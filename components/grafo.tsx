@@ -5,6 +5,11 @@ import * as d3 from 'd3';
 import {Arista, Nodo} from "@/lib/definiciones";
 import Image from 'next/image';
 
+interface Dimensions {
+    width: number;
+    height: number;
+}
+
 interface GraphComponentProps {
     nodes?: Nodo[],
     links?: Arista[],
@@ -22,20 +27,42 @@ export default function GraphComponent({...props}: GraphComponentProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [tooltip, setTooltip] = useState<TooltipData>({x: 0, y: 0, visible: false, node: null});
 
-    useEffect(() => {
-        if (!nodes || !links || !canvasRef.current) return;
+    // 1. Referencia para el div contenedor que vamos a medir
+    const containerRef = useRef<HTMLDivElement | null>(null);
 
+    // 2. Estado para guardar las dimensiones del contenedor
+    const [dimensions, setDimensions] = useState<Dimensions | null>(null);
+
+    // 3. Este useEffect se encarga de medir el contenedor
+    useEffect(() => {
+        if (containerRef.current) {
+            const observer = new ResizeObserver(entries => {
+                // Actualizamos el estado con las nuevas dimensiones
+                if (entries[0] && entries[0].contentRect) {
+                    setDimensions({
+                        width: entries[0].contentRect.width,
+                        height: entries[0].contentRect.height
+                    });
+                }
+            });
+            // Empezamos a observar el contenedor
+            observer.observe(containerRef.current);
+            // IMPORTANTE: Limpiamos el observador cuando el componente se desmonte
+            return () => observer.disconnect();
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!nodes || !links || !canvasRef.current || !dimensions) return;
+
+        const { width, height } = dimensions;
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
 
-        // Solución al primer error: Comprobar si el contexto es nulo
         if (!context) {
             console.error("No se pudo obtener el contexto 2D del canvas");
             return;
         }
-
-        const width = 1280;
-        const height = 1080;
 
         // Configuración para pantallas de alta densidad (Retina)
         const dpr = window.devicePixelRatio || 1;
@@ -134,23 +161,21 @@ export default function GraphComponent({...props}: GraphComponentProps) {
                 setTooltip((prev: any) => ({...prev, visible: false}));
             });
 
-    }, [links, nodes]);
+    }, [links, nodes, dimensions]);
 
     return (
-        <>
-            <canvas ref={canvasRef}></canvas>
+        <div ref={containerRef} className="w-full h-full">
+            <canvas ref={canvasRef} />
             {tooltip.visible && tooltip.node && (
                 <div
                     className="graph-tooltip"
                     style={{
-                        opacity: 1, // Hacemos visible el div
-                        position: 'absolute', // Aseguramos que es absoluto
-                        top: `${tooltip.y + 15}px`, // Lo posicionamos debajo del cursor
+                        opacity: 1,
+                        position: 'absolute',
+                        top: `${tooltip.y + 15}px`,
                         left: `${tooltip.x + 15}px`,
                     }}
                 >
-                    {/* El contenido del tooltip se renderiza con React */}
-                    {/* Comprobamos que la imagen exista antes de renderizarla */}
                     {tooltip.node.images[1] && (
                         <Image
                             src={tooltip.node.images[1].url}
@@ -163,6 +188,6 @@ export default function GraphComponent({...props}: GraphComponentProps) {
                     <p>Popularidad: {tooltip.node.popularity}</p>
                 </div>
             )}
-        </>
+        </div>
     );
 };

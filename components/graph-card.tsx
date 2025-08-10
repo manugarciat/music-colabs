@@ -9,8 +9,8 @@ export default function GraphCard({query}: { query: string | undefined }) {
 
 
     return (
-        <div>
+        <>
             <RelatedGraph query={query}/>
-        </div>
+        </>
     )
 }

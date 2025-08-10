@@ -11,17 +11,24 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
       const query = resolvedSearchParams.query;
 
     return (
-        <main className="flex flex-row">
-            <div className="w-[300px] flex-col m-5 ml-10 pt-10 p-8">
-                <SearchForm/>
-                <ArtistCard query={query}/>
+        <main className="relative h-screen w-screen overflow-hidden">
+            {/* Contenedor para los controles (tarjeta y búsqueda) */}
+            <div className="absolute top-0 left-0 z-10 p-5">
+                <div className="w-[300px] bg-background/80 backdrop-blur-sm p-4 rounded-lg">
+                    <SearchForm />
+                    <ArtistCard query={query} />
+                </div>
             </div>
-            <div className="m-5 ml-0 w-[1280px] h-[1080px]">
-                <Suspense key={query} fallback={<div className="text-center p-10 text">Cargando...
-                    <Grid fill="#000000"/></div>}>
+            <div className="absolute top-0 left-0 w-full h-full">
+                <Suspense key={query} fallback={
+                    <div className="text-center p-10 text">Cargando...
+                    {/*<Grid fill="#000000"/>*/}
+                    </div>}
+                >
                     <GraphCard query={query}/>
                 </Suspense>
             </div>
         </main>
     )
 }
+

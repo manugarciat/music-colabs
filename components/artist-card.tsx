@@ -18,10 +18,19 @@ export default async function ArtistCard({query}: { query: string | undefined })
                     <div className="text-4xl font-extrabold m-1 text-center"> {artista?.name} </div>
                     <p className="mb-3 text-xs text-center"> id: {artista!.id}</p>
                     <Image src={artista!.images[0].url} alt="hola" width={artista?.images[0].width}
-                           height={artista?.images[0].height} />
+                           height={artista?.images[0].height}/>
                     <div className="m-5">
-
-                        {artista.genres.map(genero => <div key={genero} > {genero} </div>)}
+                        {artista.genres.map(genero => <div key={genero}> {genero} </div>)}
+                    </div>
+                    <div className="flex justify-center mb-4">
+                        <a
+                            href={artista.external_urls.spotify}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block bg-primary rounded-md text-amber-50 hover:bg-primary/90 font-bold py-2 px-4 transition-colors"
+                        >
+                            Abrir en Spotify
+                        </a>
                     </div>
                 </div>
             )
@@ -30,6 +39,6 @@ export default async function ArtistCard({query}: { query: string | undefined })
         }
 
     } else {
-        return <div> </div>;
+        return <div></div>;
     }
 }
