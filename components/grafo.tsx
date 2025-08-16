@@ -223,8 +223,8 @@ export default function GraphComponent(props: GraphComponentProps) {
             graphData.nodes.forEach(node => {
                 context.beginPath();
                 context.moveTo((node.x || 0) + rScale(node.popularity), node.y || 0);
-                context.arc(node.x || 0, node.y || 0, rScale(node.popularity), 0, 2 * Math.PI);
-                context.fillStyle = color(String(node.grupo));
+                context.arc(node.x || 0, node.y || 0, rScale(node.popularity * 1.5), 0, 2 * Math.PI);
+                context.fillStyle = color(node.genres[0] || 'default'); //por genero
                 context.fill();
             });
         }
@@ -257,6 +257,7 @@ export default function GraphComponent(props: GraphComponentProps) {
                     )}
                     <strong>{tooltip.node.name}</strong>
                     <p>Popularidad: {tooltip.node.popularity}</p>
+                    <p>Género: {tooltip.node.genres[0]}</p>
                 </div>
             )}
         </div>
