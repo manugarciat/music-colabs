@@ -4,12 +4,19 @@ import { NextResponse } from 'next/server';
 import { getColabs, getArtist } from '@/lib/data'; // Reutilizamos nuestras funciones!
 import { Artist } from '@/lib/definiciones';
 
+
+type RouteContext = {
+  params: {
+    artistId: string;
+  };
+};
+
 export async function GET(
   request: Request,
-  { params }: { params: { artistId: string } }
+  context: RouteContext
 ) {
   try {
-    const artistId = params.artistId;
+    const artistId = context.params.artistId;
     if (!artistId) {
       return NextResponse.json({ error: 'Artist ID is required' }, { status: 400 });
     }
