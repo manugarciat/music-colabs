@@ -75,12 +75,15 @@ export default function GraphComponent(props: GraphComponentProps) {
             return;
         }
 
+        node.fx = node.x;
+        node.fy = node.y;
         console.log(`Expandiendo ${node.name}...`);
 
         // Marcamos el nodo como expandido en la UI inmediatamente
+        // El operador "..." se asegurará de copiar las nuevas propiedades fx y fy
         setGraphData(prev => ({
             ...prev,
-            nodes: prev.nodes.map(n => n.id === node.id ? { ...n, expanded: true } : n)
+            nodes: prev.nodes.map(n => n.id === node.id ? { ...n, expanded: true, fx: n.x, fy: n.y } : n)
         }));
 
         try {
@@ -192,7 +195,8 @@ export default function GraphComponent(props: GraphComponentProps) {
 
         // 1. Actualizamos la simulación con los nuevos datos del estado
         simulation.nodes(graphData.nodes);
-        (simulation.force('link') as d3.ForceLink<Nodo, Arista>).links(graphData.links);
+        // (simulation.force('link') as d3.ForceLink<Nodo, Arista>).links(graphData.links);
+        (simulation.force('link') as d3.ForceLink<Nodo, Arista>).links(JSON.parse(JSON.stringify(graphData.links)));
 
         // 2. Le damos un "empujón" para que se reacomode con los nuevos nodos
         simulation.alpha(0.3).restart();
@@ -203,9 +207,11 @@ export default function GraphComponent(props: GraphComponentProps) {
             context.clearRect(0, 0, width, height);
 
             context.strokeStyle = '#a8a8a8';
-            context.globalAlpha = 0.2;
+            context.globalAlpha = 0.4;
             context.beginPath();
-            graphData.links.forEach(link => {
+
+            const linksToDraw = (simulation.force('link') as d3.ForceLink<Nodo, Arista>).links();
+            linksToDraw.forEach(link => {
                 const source = link.source as any;
                 const target = link.target as any;
                 context.moveTo(source.x, source.y);
