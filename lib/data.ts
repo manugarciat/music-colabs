@@ -183,12 +183,12 @@ export async function makeGrafo(artista: Artist): Promise<Grafo> {
         nodos = nodos.concat(no_repetidos)
     }
     return {
-        nodos: nodos,
-        aristas: aristas
+        nodes: nodos,
+        links: aristas
     };
 }
 
-async function getArtist(id: String): Promise<Artist> {
+export async function getArtist(id: String): Promise<Artist> {
     const token = await getToken();
     const response = await fetch(`https://api.spotify.com/v1/artists/${id}`, {
         headers: {
@@ -217,10 +217,8 @@ export async function getColabs(artista: Artist): Promise<Artist[]> {
         });
     });
 
-    // ¡GRAN CAMBIO AQUÍ!
-    // En lugar de un bucle, hacemos una (o muy pocas) llamadas para obtener todos los artistas.
     const idArray = Array.from(colabsIDs);
-    // La API tiene un límite de 50, así que lo manejamos por si acaso (aunque es raro tener >50 colabs directas)
+
     const allArtists = [];
     for (let i = 0; i < idArray.length; i += 50) {
         const chunk = idArray.slice(i, i + 50);
@@ -247,14 +245,12 @@ export async function makeGrafoColabs(artista: Artist): Promise<Grafo> {
         g.setEdge(artista.id, colab.id);
     });
 
-    // 2. ¡Hemos eliminado toda la lógica de segundo grado!
-
     const nodos: Nodo[] = g.nodes().map(nodeId => g.node(nodeId));
     const aristas: Arista[] = g.edges().map(edge => ({ source: edge.v, target: edge.w }));
 
     return {
-        nodos: nodos,
-        aristas: aristas
+        nodes: nodos,
+        links: aristas
     };
 }
 
