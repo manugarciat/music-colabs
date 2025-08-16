@@ -1,34 +1,29 @@
 // app/api/collabs/[artistId]/route.ts
 
-import { NextResponse } from 'next/server';
-import { getColabs, getArtist } from '@/lib/data'; // Reutilizamos nuestras funciones!
+import { NextRequest, NextResponse } from 'next/server';
+import { getColabs, getArtist } from '@/lib/data';
 import { Artist } from '@/lib/definiciones';
 
 
-type RouteContext = {
-  params: {
-    artistId: string;
-  };
-};
-
 export async function GET(
-  request: Request,
-  context: RouteContext
+  request: NextRequest,
+  context: any
 ) {
   try {
+
     const artistId = context.params.artistId;
     if (!artistId) {
       return NextResponse.json({ error: 'Artist ID is required' }, { status: 400 });
     }
 
-    // Para llamar a getColabs, necesitamos el objeto 'Artist' completo.
-    // Así que primero lo buscamos por su ID.
     const artista = await getArtist(artistId);
 
-    // Obtenemos sus colaboradores
+    if (!artista || !artista.id) {
+        return NextResponse.json({ error: `Artist with ID ${artistId} not found` }, { status: 404 });
+    }
+
     const colaboradores = await getColabs(artista);
 
-    // Preparamos la respuesta: los nuevos nodos y los nuevos enlaces
     const newNodes = colaboradores;
     const newLinks = colaboradores.map(colab => ({
       source: artistId,
@@ -38,7 +33,8 @@ export async function GET(
     return NextResponse.json({ newNodes, newLinks });
 
   } catch (error) {
-    console.error('API Error:', error);
+    const artistId = context?.params?.artistId || 'unknown';
+    console.error(`API Error for artistId ${artistId}:`, error);
     return NextResponse.json({ error: 'Failed to fetch collaborators' }, { status: 500 });
   }
 }

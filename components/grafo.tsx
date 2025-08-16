@@ -5,7 +5,7 @@ import Image from 'next/image';
 import * as d3 from 'd3';
 import {Arista, Nodo, Grafo} from "@/lib/definiciones";
 
-// --- INTERFACES (SIN CAMBIOS) ---
+// --- INTERFACES ---
 interface Dimensions {
     width: number;
     height: number;
@@ -80,7 +80,6 @@ export default function GraphComponent(props: GraphComponentProps) {
         console.log(`Expandiendo ${node.name}...`);
 
         // Marcamos el nodo como expandido en la UI inmediatamente
-        // El operador "..." se asegurará de copiar las nuevas propiedades fx y fy
         setGraphData(prev => ({
             ...prev,
             nodes: prev.nodes.map(n => n.id === node.id ? { ...n, expanded: true, fx: n.x, fy: n.y } : n)
@@ -233,7 +232,7 @@ export default function GraphComponent(props: GraphComponentProps) {
 
     }, [graphData, dimensions]);
 
-    // --- JSX (SIN CAMBIOS) ---
+    // --- JSX ---
     return (
         <div ref={containerRef} className="w-full h-full">
             <canvas ref={canvasRef} />
