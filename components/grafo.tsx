@@ -131,8 +131,8 @@ export default function GraphComponent(props: GraphComponentProps) {
         if (!simulationRef.current) {
             // Creamos la simulación y la guardamos en la ref
             simulationRef.current = d3.forceSimulation<Nodo>()
-                .force('link', d3.forceLink<Nodo, Arista>().id((d: any) => d.id).distance(50))
-                .force('charge', d3.forceManyBody().strength(-200))
+                .force('link', d3.forceLink<Nodo, Arista>().id((d: any) => d.id).distance(70))
+                .force('charge', d3.forceManyBody().strength(-400))
                 .force('center', d3.forceCenter(width / 2, height / 2))
                 .force('collide', d3.forceCollide<Nodo>(d => rScale(d.popularity) + 5));
 
@@ -222,7 +222,7 @@ export default function GraphComponent(props: GraphComponentProps) {
             graphData.nodes.forEach(node => {
                 context.beginPath();
                 context.moveTo((node.x || 0) + rScale(node.popularity), node.y || 0);
-                context.arc(node.x || 0, node.y || 0, rScale(node.popularity * 1.5), 0, 2 * Math.PI);
+                context.arc(node.x || 0, node.y || 0, rScale(node.popularity * 1.3), 0, 2 * Math.PI);
                 context.fillStyle = color(node.genres[0] || 'default'); //por genero
                 context.fill();
             });
