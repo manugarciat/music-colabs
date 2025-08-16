@@ -18,7 +18,7 @@ export default async function RelatedGraph({query}: { query: string | undefined 
 
             return (
                 <>
-                    <GraphComponent nodes={grafo_colabs.nodos} links={grafo_colabs.aristas}/>
+                    <GraphComponent nodes={grafo_colabs.nodes} links={grafo_colabs.links}/>
                 </>
             )
         }

@@ -183,12 +183,12 @@ export async function makeGrafo(artista: Artist): Promise<Grafo> {
         nodos = nodos.concat(no_repetidos)
     }
     return {
-        nodos: nodos,
-        aristas: aristas
+        nodes: nodos,
+        links: aristas
     };
 }
 
-async function getArtist(id: String): Promise<Artist> {
+export async function getArtist(id: String): Promise<Artist> {
     const token = await getToken();
     const response = await fetch(`https://api.spotify.com/v1/artists/${id}`, {
         headers: {
@@ -217,10 +217,8 @@ export async function getColabs(artista: Artist): Promise<Artist[]> {
         });
     });
 
-    // ¡GRAN CAMBIO AQUÍ!
-    // En lugar de un bucle, hacemos una (o muy pocas) llamadas para obtener todos los artistas.
     const idArray = Array.from(colabsIDs);
-    // La API tiene un límite de 50, así que lo manejamos por si acaso (aunque es raro tener >50 colabs directas)
+
     const allArtists = [];
     for (let i = 0; i < idArray.length; i += 50) {
         const chunk = idArray.slice(i, i + 50);
@@ -238,6 +236,7 @@ export async function makeGrafoColabs(artista: Artist): Promise<Grafo> {
     artista.grupo = 0;
     g.setNode(artista.id, artista);
 
+    // 1. Obtenemos solo los colaboradores de primer grado.
     const colabs_grado_1 = await getColabs(artista);
 
     colabs_grado_1.forEach(colab => {
@@ -246,52 +245,12 @@ export async function makeGrafoColabs(artista: Artist): Promise<Grafo> {
         g.setEdge(artista.id, colab.id);
     });
 
-    // 3. OBTENER COLABORADORES DE SEGUNDO GRADO
-
-    const limiteExpansion = 9;
-    const colabs_a_expandir = colabs_grado_1.slice(0, limiteExpansion);
-
-    // ¡AQUÍ ESTÁ LA MAGIA!
-    // Definimos el tamaño de nuestro lote y los resultados que iremos acumulando.
-    const tamanoLote = 3; // Procesaremos de 5 en 5. Puedes ajustar este número.
-    const todosLosColabsDeGrado2: any[] = [];
-
-    for (let i = 0; i < colabs_a_expandir.length; i += tamanoLote) {
-        // Obtenemos el lote actual de artistas a procesar
-        const lote = colabs_a_expandir.slice(i, i + tamanoLote);
-
-        // Creamos y ejecutamos las promesas solo para este lote
-        const promesasLote = lote.map(colab => getColabs(colab));
-        const resultadosLote = await Promise.all(promesasLote);
-
-        // Guardamos los resultados del lote
-        todosLosColabsDeGrado2.push(...resultadosLote);
-
-        // Imprimimos un mensaje útil y esperamos un poco antes del siguiente lote.
-        console.log(`Procesado lote ${i/tamanoLote + 1}, esperando 1 segundo...`);
-        await sleep(1000); // Pausa de 1 segundo (1000 ms)
-    }
-
-    // Ahora procesamos los resultados, que ya tenemos todos
-    colabs_a_expandir.forEach((colab_de_grado_1, index) => {
-        const sus_colaboradores = todosLosColabsDeGrado2[index];
-        if (!sus_colaboradores) return; // Salvaguarda por si algo falla
-
-        sus_colaboradores.forEach((colab_de_grado_2: { id: string; grupo: number; }) => {
-            if (!g.hasNode(colab_de_grado_2.id)) {
-                colab_de_grado_2.grupo = 2;
-                g.setNode(colab_de_grado_2.id, colab_de_grado_2);
-            }
-            g.setEdge(colab_de_grado_1.id, colab_de_grado_2.id);
-        });
-    });
-
     const nodos: Nodo[] = g.nodes().map(nodeId => g.node(nodeId));
     const aristas: Arista[] = g.edges().map(edge => ({ source: edge.v, target: edge.w }));
 
     return {
-        nodos: nodos,
-        aristas: aristas
+        nodes: nodos,
+        links: aristas
     };
 }
 

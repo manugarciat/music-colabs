@@ -49,7 +49,7 @@ export type RelatedResponse = {
     artists: Artist[];
 }
 
-export interface Nodo extends SimulationNodeDatum {//extends SimulationNodeDatum {
+export interface Nodo extends SimulationNodeDatum {
     grupo: number;
     external_urls: {
         spotify: string;
@@ -59,17 +59,15 @@ export interface Nodo extends SimulationNodeDatum {//extends SimulationNodeDatum
     images: ArtistImage[];
     genres: string[];
     popularity: number;
+    expanded?: boolean; // <--- AÑADIDO: Propiedad opcional para la lógica de expansión
 }
 
 export interface Arista extends SimulationLinkDatum<Nodo> {
     source: string;
     target: string;
-    //value: number;
 }
 
 export type Grafo = {
-    nodos: Nodo[];
-    aristas: Arista[];
+    nodes: Nodo[];   // <--- CAMBIADO: de 'nodos' a 'nodes'
+    links: Arista[]; // <--- CAMBIADO: de 'aristas' a 'links'
 };
-
-
