@@ -80,7 +80,7 @@ export async function getAlbums(id: string): Promise<AlbumsResponse> {
     const token = await getToken();
 
     // Pido todos menos compilaciones
-    const response = await fetch(`https://api.spotify.com/v1/artists/${id}/albums?include_groups=album,single,appears_on`, {
+    const response = await fetch(`https://api.spotify.com/v1/artists/${id}/albums?include_groups=album,single,appears_on&limit=50`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -98,7 +98,7 @@ export async function getAlbums(id: string): Promise<AlbumsResponse> {
 export async function getTracks(id_album: String): Promise<AlbumTracksResponse> {
 
     const token = await getToken();
-
+    // aca se podrian pedir todos los albums del artista en bulk con Get Several Albums
     const response = await fetch(`https://api.spotify.com/v1/albums/${id_album}/tracks`, {
         headers: {
             Authorization: `Bearer ${token}`,
@@ -112,6 +112,36 @@ export async function getTracks(id_album: String): Promise<AlbumTracksResponse> 
     }
 
     return response.json();
+}
+
+async function getMultipleAlbums(albumIds: string[]): Promise<any[]> { // Usamos 'any' por simplicidad, la API devuelve un objeto complejo
+    if (albumIds.length === 0) return [];
+
+    const token = await getToken();
+    const allAlbumDetails = [];
+    const chunkSize = 50; // Límite de la API de Spotify
+
+    // Dividir las IDs de álbumes en lotes de 50
+    for (let i = 0; i < albumIds.length; i += chunkSize) {
+        const chunk = albumIds.slice(i, i + chunkSize);
+        const idsString = chunk.join(',');
+
+        const response = await fetch(`https://api.spotify.com/v1/albums?ids=${idsString}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            next: { revalidate: 3600 }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            allAlbumDetails.push(...data.albums);
+        } else {
+            console.error(`Error en API al obtener lote de álbumes:`, await response.text());
+        }
+    }
+
+    return allAlbumDetails;
 }
 
 
@@ -199,24 +229,24 @@ export async function getArtist(id: String): Promise<Artist> {
 
 export async function getColabs(artista: Artist): Promise<Artist[]> {
     const colabsIDs = new Set<string>();
+
+    // 1. Obtener todos los álbumes del artista
     const albumResponse = await getAlbums(artista.id);
-    const albums_artista = albumResponse.items;
+    const albumIds = albumResponse.items.map(album => album.id);
 
-    const trackPromises = albums_artista.map(album => getTracks(album.id));
-    const trackResponses = await Promise.all(trackPromises);
+    // 2. OBTENER TODOS LOS ÁLBUMES Y SUS PISTAS EN LOTES
+    const albumsConTracks = await getMultipleAlbums(albumIds as string[]);
 
-    trackResponses.forEach(trackResponse => {
-        if (trackResponse && trackResponse.items) {
-
-            // 1. Filtramos primero: nos quedamos solo con las canciones donde aparece nuestro artista principal.
-            const tracksConArtistaPrincipal = trackResponse.items.filter(track =>
-                track.artists.some(artist => artist.id === artista.id)
+    // 3. Procesar las pistas de los álbumes obtenidos
+    albumsConTracks.forEach(album => {
+        // El objeto album ya contiene la primera página de pistas
+        if (album && album.tracks && album.tracks.items) {
+            const tracksConArtistaPrincipal = album.tracks.items.filter((track: any) =>
+                track.artists.some((artist: any) => artist.id === artista.id)
             );
 
-            // 2. Ahora, solo iteramos sobre esas canciones filtradas.
-            tracksConArtistaPrincipal.forEach(track => {
-                // 3. De cada una de esas canciones, extraemos a los OTROS artistas.
-                track.artists.forEach(artist => {
+            tracksConArtistaPrincipal.forEach((track: any) => {
+                track.artists.forEach((artist: any) => {
                     if (artist.id !== artista.id) {
                         colabsIDs.add(artist.id);
                     }
@@ -227,6 +257,7 @@ export async function getColabs(artista: Artist): Promise<Artist[]> {
 
     const idArray = Array.from(colabsIDs);
 
+    // Obtener los detalles de los artistas colaboradores
     const allArtists = [];
     for (let i = 0; i < idArray.length; i += 50) {
         const chunk = idArray.slice(i, i + 50);
