@@ -2,16 +2,18 @@
 
 https://music-colabs.vercel.app/
 
-Una aplicación web interactiva que visualiza la red de colaboraciones entre artistas musicales utilizando la API de Spotify y D3.js. Descubre las conexiones ocultas entre tus músicos favoritos con un grafo dinámico de hasta dos grados de separación.
+Una herramienta de exploración interactiva para visualizar la red de colaboraciones entre artistas musicales, utilizando la API de Spotify y D3.js. Comienza con los colaboradores directos de un artista y expande la red nodo por nodo con cada clic, descubriendo conexiones musicales de una forma orgánica.
+    
+![david_lynch_alva_noto.png](public/david_lynch_alva_noto.png)
 
 ## ⚡️ Características
 
 -   [x] **Búsqueda de Artistas:** Encuentra cualquier artista disponible en la base de datos de Spotify.
--   [x] **Visualización en Grafo:** Muestra al artista principal, sus colaboradores directos (1er grado) y los colaboradores de estos (2do grado).
+-   [x] **Expansión Interactiva del Grafo:** Empieza con los colaboradores directos y expande la red al hacer clic en cualquier artista, creando una visualización única en cada exploración.
 -   [x] **Renderizado de Alto Rendimiento:** Utiliza **HTML Canvas** para renderizar grafos con cientos de nodos de forma fluida y sin caídas de rendimiento.
 -   [x] **Grafo Interactivo:** Arrastra los nodos para explorar la red a tu gusto.
 -   [x] **Tooltips Informativos:** Pasa el ratón sobre cualquier artista para ver su foto, nombre y nivel de popularidad.
--   [x] **Diseño Moderno:** Interfaz limpia y responsiva construida con Next.js y Tailwind CSS.
+-   [x] **Diseño:** Interfaz constuida con Next.js y Tailwind CSS.
 
 ## 🛠️ Tecnologías Utilizadas
 
