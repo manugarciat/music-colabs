@@ -31,11 +31,11 @@ export default function SearchForm() {
                         name="artista"
                         type="text"
                         placeholder="Buscar artista"
-                        className="py-2 pl-2 text-sm w-3/4 m-1 bg-input rounded-md"
+                        className="py-2 pl-2 text-sm w-3/4 m-1 bg-input rounded-sm"
                         aria-describedby="nombre artista"/>
 
                     <button type="submit"
-                            className="py-2 p-6 m-1 bg-primary rounded-md text-amber-50 hover:bg-primary/90 transition-colors">
+                            className="py-2 p-6 m-1 bg-primary rounded-sm text-amber-50 hover:bg-primary/90 transition-colors">
                         <MagnifyingGlassIcon className="w-4 "/>
                     </button>
                 </div>

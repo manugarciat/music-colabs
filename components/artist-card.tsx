@@ -27,7 +27,7 @@ export default async function ArtistCard({query}: { query: string | undefined })
                             href={artista.external_urls.spotify}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-block bg-primary rounded-md text-amber-50 hover:bg-primary/90 font-bold py-2 px-4 transition-colors"
+                            className="inline-block bg-primary rounded-sm text-amber-50 hover:bg-primary/90 font-bold py-2 px-4 transition-colors"
                         >
                             Abrir en Spotify
                         </a>

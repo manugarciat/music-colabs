@@ -142,8 +142,8 @@ export default function GraphComponent(props: GraphComponentProps) {
             context.lineWidth = 1 / transform.k;
             context.beginPath();
             (simulationRef.current?.force('link') as d3.ForceLink<Nodo, Arista>).links().forEach(link => {
-                const source = link.source as Nodo;
-                const target = link.target as Nodo;
+                const source = link.source as unknown as Nodo;
+                const target = link.target as unknown as Nodo;
                 if(source.x && source.y && target.x && target.y){
                     context.moveTo(source.x, source.y);
                     context.lineTo(target.x, target.y);
@@ -242,7 +242,7 @@ export default function GraphComponent(props: GraphComponentProps) {
                     if (event.defaultPrevented) return;
                     const node = findNode(event);
                     if (node) {
-                        handleNodeClick(node);
+                        handleNodeClick(node).then(r => r);
                     }
                 })
                 .on('mouseleave', () => {

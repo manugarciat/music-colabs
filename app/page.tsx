@@ -14,7 +14,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
         <main className="relative h-screen w-screen overflow-hidden">
             {/* Contenedor para los controles (tarjeta y búsqueda) */}
             <div className="absolute top-0 left-0 z-10 p-5">
-                <div className="w-[300px] bg-background/80 backdrop-blur-sm p-4 rounded-lg">
+                <div className="w-[300px] bg-background/50 backdrop-blur-sm p-4 rounded-lg shadow-lg">
                     <SearchForm />
                     <ArtistCard query={query} />
                 </div>
