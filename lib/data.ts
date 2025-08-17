@@ -12,9 +12,6 @@ import {
 } from "@/lib/definiciones";
 import {Graph} from 'graphlib';
 
-const sleep =
-    (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 async function getToken(): Promise<String> {
 
     const basicAuth = Buffer.from(
@@ -82,7 +79,7 @@ export async function getAlbums(id: string): Promise<AlbumsResponse> {
 
     const token = await getToken();
 
-    const response = await fetch(`https://api.spotify.com/v1/artists/${id}/albums?limit=50`, { // Pido 50 para tener más datos
+    const response = await fetch(`https://api.spotify.com/v1/artists/${id}/albums`, { // Pido 50 para tener más datos
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -207,14 +204,24 @@ export async function getColabs(artista: Artist): Promise<Artist[]> {
     const trackPromises = albums_artista.map(album => getTracks(album.id));
     const trackResponses = await Promise.all(trackPromises);
 
-    trackResponses.forEach(tracks => {
-        tracks.items.forEach(item => {
-            item.artists.forEach(artist => {
-                if (artist.id !== artista.id) {
-                    colabsIDs.add(artist.id);
-                }
+    trackResponses.forEach(trackResponse => {
+        if (trackResponse && trackResponse.items) {
+
+            // 1. Filtramos primero: nos quedamos solo con las canciones donde aparece nuestro artista principal.
+            const tracksConArtistaPrincipal = trackResponse.items.filter(track =>
+                track.artists.some(artist => artist.id === artista.id)
+            );
+
+            // 2. Ahora, solo iteramos sobre esas canciones filtradas.
+            tracksConArtistaPrincipal.forEach(track => {
+                // 3. De cada una de esas canciones, extraemos a los OTROS artistas.
+                track.artists.forEach(artist => {
+                    if (artist.id !== artista.id) {
+                        colabsIDs.add(artist.id);
+                    }
+                });
             });
-        });
+        }
     });
 
     const idArray = Array.from(colabsIDs);
