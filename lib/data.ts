@@ -43,7 +43,7 @@ export async function searchArtist(req: string): Promise<ArtistsResponse> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 3600}
+        next: {revalidate: 86400}
     });
     return response.json()
 
@@ -58,7 +58,7 @@ export async function getRelated(id: string): Promise<RelatedResponse> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 3600}
+        next: {revalidate: 86400}
     });
 
     if (!response.ok) {
@@ -79,11 +79,12 @@ export async function getAlbums(id: string): Promise<AlbumsResponse> {
 
     const token = await getToken();
 
-    const response = await fetch(`https://api.spotify.com/v1/artists/${id}/albums`, { // Pido 50 para tener más datos
+    // Pido todos menos compilaciones
+    const response = await fetch(`https://api.spotify.com/v1/artists/${id}/albums?include_groups=album,single,appears_on`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 3600}
+        next: {revalidate: 86400}
     });
 
     if (!response.ok) {
@@ -102,7 +103,7 @@ export async function getTracks(id_album: String): Promise<AlbumTracksResponse> 
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 3600}
+        next: {revalidate: 86400}
     });
 
     if (!response.ok) {
@@ -191,7 +192,7 @@ export async function getArtist(id: String): Promise<Artist> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 3600}
+        next: {revalidate: 86400}
     });
     return response.json()
 }
@@ -270,7 +271,7 @@ async function getArtists(ids: string[]): Promise<Artist[]> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 3600}
+        next: {revalidate: 86400}
     });
 
     if (!response.ok) {
