@@ -14,7 +14,7 @@ function ArtistNode({ rigidBodyRef }: { rigidBodyRef: React.RefObject<RapierRigi
     return (
         <RigidBody ref={rigidBodyRef} restitution={0.8} position={initialPosition}>
             <Sphere args={[0.5, 32, 32]}>
-                <meshStandardMaterial color={'hotpink'} />
+                <meshStandardMaterial color={'red'} />
             </Sphere>
         </RigidBody>
     );

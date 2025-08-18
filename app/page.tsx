@@ -32,9 +32,9 @@ export default async function Home({ searchParams }: { searchParams: { query?: s
             </div>
             <div className="absolute top-0 left-0 w-full h-full">
                 {graphData ? (
-                    <Suspense fallback={<div className="text-center p-10">Cargando Grafo...</div>}>
+                    // <Suspense fallback={<div className="text-center p-10">Cargando Grafo...</div>}>
                         <GraphCard key={query} nodes={graphData.nodes} links={graphData.links} />
-                    </Suspense>
+                    // </Suspense>
                 ) : (
                     <div className="flex items-center justify-center h-full text-gray-500">
                         Busca un artista para empezar
