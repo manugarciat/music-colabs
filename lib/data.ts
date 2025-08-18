@@ -119,9 +119,9 @@ async function getMultipleAlbums(albumIds: string[]): Promise<any[]> { // Usamos
 
     const token = await getToken();
     const allAlbumDetails = [];
-    const chunkSize = 50; // Límite de la API de Spotify
+    const chunkSize = 20; // Límite de la API de Spotify
 
-    // Dividir las IDs de álbumes en lotes de 50
+    // Dividir las IDs de álbumes en lotes de 20
     for (let i = 0; i < albumIds.length; i += chunkSize) {
         const chunk = albumIds.slice(i, i + chunkSize);
         const idsString = chunk.join(',');
