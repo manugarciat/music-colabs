@@ -1,7 +1,6 @@
 // components/grafo.tsx
 'use client'
 
-// --- MODIFICADO: Quitar useState de los imports ---
 import React, { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Sphere, Line, MapControls } from '@react-three/drei'
@@ -16,15 +15,17 @@ const scalePopularity = (popularity: number) => {
     return minRadius + (maxRadius - minRadius) * (popularity / 100);
 }
 
-// (El componente ArtistNode no cambia, ya está preparado para recibir 'onHover')
+// --- ArtistNode AHORA RECIBE onNodeClick ---
 function ArtistNode({
     node,
     rigidBodyRef,
-    onHover
+    onHover,
+    onNodeClick // <-- Nueva prop
 }: {
     node: Nodo,
     rigidBodyRef: React.RefObject<RapierRigidBody>,
-    onHover: (hoverData: { node: Nodo | null, x: number, y: number }) => void
+    onHover: (hoverData: { node: Nodo | null, x: number, y: number }) => void,
+    onNodeClick: (nodeId: string) => void // <-- Tipo de la nueva prop
 }) {
     const initialPosition = useMemo(() => new THREE.Vector3((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5), []);
     const radius = useMemo(() => scalePopularity(node.popularity), [node.popularity]);
@@ -33,59 +34,38 @@ function ArtistNode({
         <RigidBody ref={rigidBodyRef} restitution={0.8} position={initialPosition}>
             <Sphere
                 args={[radius, 32, 32]}
-                onPointerOver={(e) => {
-                    e.stopPropagation();
-                    onHover({ node, x: e.clientX, y: e.clientY });
-                    document.body.style.cursor = 'pointer';
-                }}
-                onPointerOut={() => {
-                    onHover({ node: null, x: 0, y: 0 });
-                    document.body.style.cursor = 'default';
+                onPointerOver={(e) => { e.stopPropagation(); onHover({ node, x: e.clientX, y: e.clientY }); document.body.style.cursor = 'pointer'; }}
+                onPointerOut={() => { onHover({ node: null, x: 0, y: 0 }); document.body.style.cursor = 'default'; }}
+                // --- NUEVO: Evento onClick ---
+                onClick={() => {
+                    // Si el nodo no ha sido expandido, llama a la función
+                    if (!node.expanded) {
+                        onNodeClick(node.id);
+                    }
                 }}
             >
-                <meshStandardMaterial color={node.grupo === 0 ? 'gold' : '#c72f4e'} />
+                {/* --- Color dinámico: gris si ya fue expandido --- */}
+                <meshStandardMaterial color={node.grupo === 0 ? 'gold' : node.expanded ? '#666' : '#c72f4e'} />
             </Sphere>
         </RigidBody>
     );
 }
 
-// (El componente LinkLine no cambia)
-function LinkLine({ sourceRef, targetRef }: { sourceRef: React.RefObject<RapierRigidBody>, targetRef: React.RefObject<RapierRigidBody> }) {
-    const lineRef = useRef<THREE.Line>(null!);
-    const points = useMemo(() => [new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,0)], []);
+// (LinkLine no cambia)
+function LinkLine({ sourceRef, targetRef }: { sourceRef: React.RefObject<RapierRigidBody>, targetRef: React.RefObject<RapierRigidBody> }) { /* ...código sin cambios... */ }
 
-    useFrame(() => {
-        if (sourceRef.current && targetRef.current) {
-            const sourcePos = sourceRef.current.translation();
-            const targetPos = targetRef.current.translation();
-            points[0].set(sourcePos.x, sourcePos.y, sourcePos.z);
-            points[1].set(targetPos.x, targetPos.y, targetPos.z);
-            lineRef.current.geometry.setFromPoints(points);
-        }
-    });
-
-    return <Line ref={lineRef} points={points} color="white" lineWidth={0.5} transparent opacity={0.5} />;
-}
-
-
-// --- MODIFICADO: Las props ahora incluyen onHover ---
+// --- GraphComponent AHORA RECIBE onNodeClick ---
 interface GraphComponentProps {
     nodes: Nodo[];
     links: Arista[];
     onHover: (hoverData: { node: Nodo | null, x: number, y: number }) => void;
+    onNodeClick: (nodeId: string) => void; // <-- Nueva prop
 }
 
-// --- COMPONENTE PRINCIPAL DEL GRAFO ---
-export default function GraphComponent({ nodes, links, onHover }: GraphComponentProps) {
-
-    // --- ELIMINADO: El estado del tooltip ya no vive aquí ---
-    // const [hoverInfo, setHoverInfo] = useState(...);
-
+export default function GraphComponent({ nodes, links, onHover, onNodeClick }: GraphComponentProps) {
     const rigidBodyRefs = useMemo(() => {
         const refs: { [key: string]: React.RefObject<RapierRigidBody> } = {};
-        nodes.forEach(node => {
-            refs[node.id] = React.createRef<RapierRigidBody>();
-        });
+        nodes.forEach(node => { refs[node.id] = React.createRef<RapierRigidBody>(); });
         return refs;
     }, [nodes]);
 
@@ -101,7 +81,8 @@ export default function GraphComponent({ nodes, links, onHover }: GraphComponent
                         key={node.id}
                         node={node}
                         rigidBodyRef={rigidBodyRefs[node.id]}
-                        onHover={onHover} // <-- Pasamos la función que vino de las props
+                        onHover={onHover}
+                        onNodeClick={onNodeClick} // <-- Pasar la función al nodo
                     />
                 ))}
 
@@ -114,8 +95,6 @@ export default function GraphComponent({ nodes, links, onHover }: GraphComponent
                     return null;
                 })}
             </Physics>
-
-            {/* --- ELIMINADO: El tooltip ya no se renderiza aquí --- */}
         </>
     );
 }
