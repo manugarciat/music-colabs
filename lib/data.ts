@@ -249,6 +249,7 @@ export async function getColabs(artista: Artist): Promise<Artist[]> {
                 track.artists.forEach((artist: any) => {
                     if (artist.id !== artista.id) {
                         colabsIDs.add(artist.id);
+                        console.log(artist.name)
                     }
                 });
             });
