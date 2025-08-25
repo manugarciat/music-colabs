@@ -27,28 +27,36 @@ function ArtistNode({
     onHover: (hoverData: { node: Nodo | null, x: number, y: number }) => void,
     onNodeClick: (nodeId: string) => void
 }) {
-    const initialPosition = useMemo(() => new THREE.Vector3((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5), []);
+    // --- CAMBIO 1: Posición inicial siempre en Z=0 ---
+    const initialPosition = useMemo(() => new THREE.Vector3((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, 0), []);
     const radius = useMemo(() => scalePopularity(node.popularity), [node.popularity]);
 
+    // --- CAMBIO 2: Bloquear el movimiento en el eje Z ---
+    useEffect(() => {
+        // Una vez que el cuerpo físico existe, le aplicamos el bloqueo
+        if (rigidBodyRef.current) {
+            // Permitir traslación en X e Y, pero no en Z
+            rigidBodyRef.current.setEnabledTranslations(true, true, false, true);
+            // Bloquear rotación en todos los ejes
+            rigidBodyRef.current.setEnabledRotations(false, false, false, true);
+        }
+    }, [rigidBodyRef]);
+
     return (
-        <RigidBody ref={rigidBodyRef} restitution={0.8} position={initialPosition} colliders={false}>
-            <BallCollider args={[radius * 3.5]}/>
+        <RigidBody
+            ref={rigidBodyRef}
+            restitution={0.2}
+            position={initialPosition}
+            colliders={false}
+        >
+            <BallCollider args={[radius * 1.5]} />
             <Sphere
                 args={[radius, 32, 32]}
-                onPointerOver={(e) => {
-                    e.stopPropagation();
-                    onHover({node, x: e.clientX, y: e.clientY});
-                    document.body.style.cursor = 'pointer';
-                }}
-                onPointerOut={() => {
-                    onHover({node: null, x: 0, y: 0});
-                    document.body.style.cursor = 'default';
-                }}
-                onClick={() => {
-                    if (!node.expanded) onNodeClick(node.id);
-                }}
+                onPointerOver={(e) => { e.stopPropagation(); onHover({ node, x: e.clientX, y: e.clientY }); document.body.style.cursor = 'pointer'; }}
+                onPointerOut={() => { onHover({ node: null, x: 0, y: 0 }); document.body.style.cursor = 'default'; }}
+                onClick={() => { if (!node.expanded) onNodeClick(node.id); }}
             >
-                <meshStandardMaterial color={node.grupo === 0 ? 'gold' : node.expanded ? '#666' : '#c72f4e'}/>
+                <meshStandardMaterial color={node.grupo === 0 ? 'gold' : node.expanded ? '#666' : '#c72f4e'} />
             </Sphere>
         </RigidBody>
     );
@@ -139,33 +147,29 @@ interface GraphComponentProps {
 }
 
 // --- COMPONENTE PRINCIPAL DEL GRAFO ---
-export default function GraphComponent({nodes, links, onHover, onNodeClick}: GraphComponentProps) {
+export default function GraphComponent({ nodes, links, onHover, onNodeClick }: GraphComponentProps) {
 
-    // --- CLAVE 1: Usar useRef para un mapa persistente de refs ---
     const rigidBodyRefs = useRef<{ [key: string]: React.RefObject<RapierRigidBody> }>({});
 
-    // --- CLAVE 2: Sincronizar el mapa de refs cuando los nodos cambien ---
-    // Esto asegura que solo se creen refs para los nodos nuevos, sin destruir los viejos.
-    useEffect(() => {
-        nodes.forEach(node => {
-            if (!rigidBodyRefs.current[node.id]) {
-                rigidBodyRefs.current[node.id] = React.createRef<RapierRigidBody>();
-            }
-        });
-    }, [nodes]);
+    // --- ¡CLAVE DE LA SOLUCIÓN! ---
+    // Sincronizamos las refs aquí, en el cuerpo del componente.
+    // Esto se ejecuta en cada render, ANTES de que los hijos se rendericen.
+    nodes.forEach(node => {
+        if (!rigidBodyRefs.current[node.id]) {
+            rigidBodyRefs.current[node.id] = React.createRef<RapierRigidBody>();
+        }
+    });
 
     return (
         <>
-            <MapControls/>
-            <ambientLight intensity={1.5}/>
-            <pointLight position={[10, 10, 10]}/>
-
-            <Physics gravity={[0, 0, 0]} colliders="ball">
+            <MapControls enableRotate={false} />
+            <ambientLight intensity={1.5} />
+            <pointLight position={[10, 10, 10]} />
+            <Physics gravity={[0, 0, 0]}>
                 {nodes.map(node => (
                     <ArtistNode
                         key={node.id}
                         node={node}
-                        // --- CLAVE 3: Acceder a la ref desde .current ---
                         rigidBodyRef={rigidBodyRefs.current[node.id]}
                         onHover={onHover}
                         onNodeClick={onNodeClick}
@@ -173,21 +177,12 @@ export default function GraphComponent({nodes, links, onHover, onNodeClick}: Gra
                 ))}
 
                 {links.map((link, index) => {
-                    // --- CLAVE 3: Acceder a las refs desde .current ---
                     const sourceRef = rigidBodyRefs.current[link.source as string];
                     const targetRef = rigidBodyRefs.current[link.target as string];
-
-                    return sourceRef && targetRef ? (
-                        <LinkLine
-                            key={`${link.source}-${link.target}-${index}`}
-                            sourceRef={sourceRef}
-                            targetRef={targetRef}
-                        />
-                    ) : null;
+                    return sourceRef && targetRef ? <LinkLine key={`${link.source}-${link.target}-${index}`} sourceRef={sourceRef} targetRef={targetRef} /> : null;
                 })}
 
-                {/* --- CLAVE 3: Pasar el mapa .current a los componentes de físicas --- */}
-                {/*<LinkForces links={links} refs={rigidBodyRefs.current} />*/}
+                <LinkForces links={links} refs={rigidBodyRefs.current} />
                 <CenterForce refs={rigidBodyRefs.current} />
             </Physics>
         </>
