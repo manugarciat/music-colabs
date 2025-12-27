@@ -10,9 +10,10 @@ interface GraphCardProps {
     nodes: Nodo[];
     links: Arista[];
     onNodeClick: (nodeId: string) => void;
+    layoutTrigger?: number;
 }
 
-export default function GraphCard({ nodes, links, onNodeClick }: GraphCardProps) {
+export default function GraphCard({ nodes, links, onNodeClick, layoutTrigger }: GraphCardProps) {
     const [hoverInfo, setHoverInfo] = useState<{ node: any | null, x: number, y: number }>({ node: null, x: 0, y: 0 });
 
     return (
@@ -22,6 +23,7 @@ export default function GraphCard({ nodes, links, onNodeClick }: GraphCardProps)
                 links={links}
                 onHover={setHoverInfo}
                 onNodeClick={onNodeClick}
+                layoutTrigger={layoutTrigger}
             />
             {hoverInfo.node && (
                 <div className="graph-tooltip" style={{ position: 'absolute', top: `${hoverInfo.y}px`, left: `${hoverInfo.x}px`, pointerEvents: 'none' }}>

@@ -8,7 +8,8 @@ import { Nodo, Arista, Artist } from "@/lib/definiciones";
 // --- NUEVO: Importar nuestro nuevo contenedor de cliente ---
 import GraphContainer from "@/components/graph-container";
 
-export default async function Home({ searchParams }: { searchParams: { query?: string } }) {
+export default async function Home(props: { searchParams: Promise<{ query?: string }> }) {
+    const searchParams = await props.searchParams;
     const query = searchParams.query;
 
     // --- Obtener los datos iniciales aquí, en el servidor ---
@@ -29,7 +30,7 @@ export default async function Home({ searchParams }: { searchParams: { query?: s
     }
 
     return (
-        <main className="relative h-screen w-screen overflow-hidden">
+        <main className="relative h-screen w-screen overflow-hidden bg-gradient-to-br from-[#121212] via-[#1e1e24] to-[#2a2a35] text-white">
             {/* --- Renderizar el CONTENEDOR DE CLIENTE y pasarle los datos iniciales --- */}
             <GraphContainer
                 initialArtist={initialArtist}

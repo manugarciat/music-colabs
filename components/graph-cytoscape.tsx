@@ -5,6 +5,10 @@ import React, { useEffect, useState, useMemo } from 'react';
 import CytoscapeComponent from 'react-cytoscapejs';
 import { Nodo, Arista } from '@/lib/definiciones';
 import cytoscape from 'cytoscape';
+// @ts-ignore
+import cola from 'cytoscape-cola';
+
+cytoscape.use(cola);
 
 // Props que recibe el componente
 interface CytoscapeGraphProps {
@@ -12,9 +16,10 @@ interface CytoscapeGraphProps {
     links: Arista[];
     onNodeClick: (nodeId: string) => void;
     onHover: (hoverData: { node: any | null, x: number, y: number }) => void;
+    layoutTrigger?: number;
 }
 
-export default function CytoscapeGraph({ nodes, links, onNodeClick, onHover }: CytoscapeGraphProps) {
+export default function CytoscapeGraph({ nodes, links, onNodeClick, onHover, layoutTrigger = 0 }: CytoscapeGraphProps) {
 
     // --- NUEVO: Estado para guardar la instancia de Cytoscape ---
     const [cy, setCy] = useState<cytoscape.Core | null>(null);
@@ -31,13 +36,19 @@ export default function CytoscapeGraph({ nodes, links, onNodeClick, onHover }: C
     }, [nodes, links]);
 
     const layout = useMemo(() => ({
-        name: 'cose',
+        name: 'cola',
         animate: true,
-        animationDuration: 500,
+        refresh: 1,
+        infinite: false,
+        ungrabifyWhileSimulating: false,
         fit: true,
         padding: 50,
-        nodeRepulsion: 4500,
-        gravity: 0.1,
+        randomize: false,
+
+        // Physics parameters for "breathing" graph
+        nodeSpacing: (node: any) => 40,
+        edgeLength: (edge: any) => 150,
+        gravity: 0.8,
     }), []);
 
     // --- SOLUCIÓN 1: Re-ejecutar el layout cuando los elementos cambian ---
@@ -47,7 +58,7 @@ export default function CytoscapeGraph({ nodes, links, onNodeClick, onHover }: C
             // ...le decimos que ejecute el layout de nuevo.
             cy.layout(layout).run();
         }
-    }, [elements, cy, layout]); // Se dispara cada vez que llegan nuevos nodos/links
+    }, [elements, cy, layout, layoutTrigger]); // Se dispara cada vez que llegan nuevos nodos/links o el trigger cambia
 
     // --- SOLUCIÓN 2: Hacer el texto dinámico y más legible ---
     const stylesheet = useMemo(() => ([
@@ -75,7 +86,7 @@ export default function CytoscapeGraph({ nodes, links, onNodeClick, onHover }: C
         },
         {
             selector: 'edge',
-            style: { 'width': 2, 'line-color': '#ccc', 'curve-style': 'bezier' }
+            style: { 'width': 0.5, 'line-color': '#ccc', 'curve-style': 'bezier', 'opacity': 0.5 }
         },
         {
             selector: 'node:hover',
@@ -97,6 +108,13 @@ export default function CytoscapeGraph({ nodes, links, onNodeClick, onHover }: C
             layout={{ name: 'preset' }} // Usamos un layout 'preset' inicial para que el useEffect tenga el control
             stylesheet={stylesheet}
             style={{ width: '100%', height: '100%' }}
+            zoomingEnabled={true}
+            userZoomingEnabled={true}
+            panningEnabled={true}
+            userPanningEnabled={true}
+            minZoom={0.5}
+            maxZoom={2}
+            wheelSensitivity={0.2}
             cy={(cyInstance: cytoscape.Core) => {
                 // Guardamos la instancia en el estado para poder usarla en el useEffect
                 setCy(cyInstance);
@@ -110,11 +128,13 @@ export default function CytoscapeGraph({ nodes, links, onNodeClick, onHover }: C
                     const node = event.target.data();
                     const renderedPosition = event.renderedPosition;
                     onHover({ node, x: renderedPosition.x, y: renderedPosition.y });
-                    cyInstance.container().style.cursor = 'pointer';
+                    const container = cyInstance.container();
+                    if (container) container.style.cursor = 'pointer';
                 });
                 cyInstance.on('mouseout', 'node', () => {
                     onHover({ node: null, x: 0, y: 0 });
-                    cyInstance.container().style.cursor = 'default';
+                    const container = cyInstance.container();
+                    if (container) container.style.cursor = 'default';
                 });
             }}
         />

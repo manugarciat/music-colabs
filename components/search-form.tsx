@@ -1,8 +1,8 @@
 'use client'
 
-import {MagnifyingGlassIcon} from "@heroicons/react/24/outline";
-import {useSearchParams, usePathname, useRouter} from 'next/navigation';
-import {Switch} from "@/components/ui/switch"
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
+import { Switch } from "@/components/ui/switch"
 import React from "react";
 
 
@@ -24,19 +24,19 @@ export default function SearchForm() {
     }
     return (
         <>
-            <form action={handleSearch}>
-                <div className="flex flex-row justify-evenly">
+            <form action={handleSearch} className="w-full relative">
+                <div className="flex flex-row justify-evenly w-full">
                     <input
                         id="artist_input"
                         name="artista"
                         type="text"
                         placeholder="Buscar artista"
-                        className="py-2 pl-2 text-sm w-3/4 m-1 bg-input rounded-sm"
-                        aria-describedby="nombre artista"/>
+                        className="w-full pl-4 pr-12 py-3 rounded-full bg-white/10 backdrop-blur-md border border-white/10 focus:border-white/30 focus:ring-0 text-white placeholder-white/50 outline-none transition-all shadow-inner"
+                        aria-describedby="nombre artista" />
 
                     <button type="submit"
-                            className="py-2 p-6 m-1 bg-primary rounded-sm text-amber-50 hover:bg-primary/90 transition-colors">
-                        <MagnifyingGlassIcon className="w-4 "/>
+                        className="absolute right-1 top-1 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+                        <MagnifyingGlassIcon className="w-5 h-5" />
                     </button>
                 </div>
             </form>
