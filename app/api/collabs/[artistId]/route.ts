@@ -11,7 +11,7 @@ export async function GET(
 ) {
   try {
 
-    const artistId = context.params.artistId;
+    const { artistId } = await context.params;
     if (!artistId) {
       return NextResponse.json({ error: 'Artist ID is required' }, { status: 400 });
     }
@@ -19,7 +19,7 @@ export async function GET(
     const artista = await getArtist(artistId);
 
     if (!artista || !artista.id) {
-        return NextResponse.json({ error: `Artist with ID ${artistId} not found` }, { status: 404 });
+      return NextResponse.json({ error: `Artist with ID ${artistId} not found` }, { status: 404 });
     }
 
     const colaboradores = await getColabs(artista);

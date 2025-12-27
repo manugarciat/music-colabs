@@ -1,4 +1,4 @@
-import {SimulationLinkDatum, SimulationNodeDatum} from "d3";
+import { SimulationLinkDatum, SimulationNodeDatum } from "d3";
 
 export type ArtistImage = {
     url: string;
@@ -50,6 +50,10 @@ export type RelatedResponse = {
 }
 
 export interface Nodo extends SimulationNodeDatum {
+    // 3D coordinates (optional, added for ForceGraph3D)
+    z?: number;
+    vz?: number;
+    fz?: number;
     grupo: number;
     external_urls: {
         spotify: string;
