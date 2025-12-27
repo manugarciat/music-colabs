@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Oval } from 'react-loading-icons';
-import { ArrowPathIcon } from '@heroicons/react/24/outline';
 import SearchForm from "@/components/search-form";
 import ArtistCard from "@/components/artist-card";
 import GraphCard from "@/components/graph-card";
@@ -22,7 +21,6 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
     const [artist, setArtist] = useState<Artist | null>(initialArtist);
     const [graphData, setGraphData] = useState<{ nodes: Nodo[], links: Arista[] } | null>(initialGraphData);
     const [isLoading, setIsLoading] = useState(false);
-    const [layoutTrigger, setLayoutTrigger] = useState(0);
 
     // Sincronizar el estado si la búsqueda cambia (cuando Next.js navega)
     useEffect(() => {
@@ -68,15 +66,7 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                     <SearchForm />
                     <ArtistCard artist={artist} />
 
-                    {graphData && (
-                        <button
-                            onClick={() => setLayoutTrigger(t => t + 1)}
-                            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white text-sm font-medium transition-colors border border-white/10"
-                        >
-                            <ArrowPathIcon className="w-4 h-4" />
-                            Reordenar Grafo
-                        </button>
-                    )}
+
                 </div>
             </div>
             <div className="absolute top-0 left-0 w-full h-full">
@@ -86,11 +76,10 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                     </div>
                 ) : graphData ? (
                     <GraphCard
-                        key={query}
+                        key={query} // Reset graph on new query
                         nodes={graphData.nodes}
                         links={graphData.links}
                         onNodeClick={handleExpandNode}
-                        layoutTrigger={layoutTrigger}
                     />
                 ) : (
                     <div className="flex items-center justify-center h-full">Busca un artista para empezar</div>
