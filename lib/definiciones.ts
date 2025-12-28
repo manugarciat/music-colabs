@@ -72,6 +72,13 @@ export interface Nodo extends SimulationNodeDatum {
 export interface Arista extends SimulationLinkDatum<Nodo> {
     source: string;
     target: string;
+    tracks?: {
+        id: string;
+        name: string;
+        external_urls: {
+            spotify: string;
+        }
+    }[];
 }
 
 export type Grafo = {

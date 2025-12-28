@@ -6,6 +6,7 @@ import { Oval } from 'react-loading-icons';
 import DebouncedSearch from "@/components/debounced-search";
 import ArtistCard from "@/components/artist-card";
 import GraphCard from "@/components/graph-card";
+import CollabPanel from "@/components/collab-panel";
 import { Nodo, Arista, Artist } from "@/lib/definiciones";
 
 // Props que recibe del Server Component
@@ -59,16 +60,52 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
         });
     };
 
+    // --- Estado para el panel de colaboraciones ---
+    const [selectedCollab, setSelectedCollab] = useState<Arista | null>(null);
+
+    const handleLinkClick = (link: Arista) => {
+        if (link.tracks && link.tracks.length > 0) {
+            setSelectedCollab(link);
+        }
+    }
+
     return (
         <>
-            <div className="absolute top-0 left-0 z-10 p-5 h-full pointer-events-none">
-                <div className="w-[340px] h-full overflow-y-auto pointer-events-auto pr-2 pb-10">
+            <div className="absolute top-0 left-0 z-10 p-5 h-full pointer-events-none flex flex-col justify-between">
+                {/* Top Section: Search & Artist Card */}
+                <div className="w-[340px] max-h-[60%] overflow-y-auto pointer-events-auto custom-scrollbar">
                     <DebouncedSearch />
                     <ArtistCard artist={artist} />
-
-
                 </div>
+
+                {/* Bottom Section: Collab Panel */}
+                {selectedCollab && graphData && (
+                    <div className="pointer-events-auto mt-4">
+                        {(() => {
+                            // Helper to get ID whether source/target is string or object (d3 mutation)
+                            const getID = (val: string | Nodo) => (typeof val === 'object' ? val.id : val);
+
+                            const sourceID = getID(selectedCollab.source as any);
+                            const targetID = getID(selectedCollab.target as any);
+
+                            const sourceNode = graphData.nodes.find(n => n.id === sourceID);
+                            const targetNode = graphData.nodes.find(n => n.id === targetID);
+
+                            if (!sourceNode || !targetNode) return null;
+
+                            return (
+                                <CollabPanel
+                                    source={sourceNode}
+                                    target={targetNode}
+                                    tracks={selectedCollab.tracks || []}
+                                    onClose={() => setSelectedCollab(null)}
+                                />
+                            );
+                        })()}
+                    </div>
+                )}
             </div>
+
             <div className="absolute top-0 left-0 w-full h-full">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-full">
@@ -80,6 +117,7 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                         nodes={graphData.nodes}
                         links={graphData.links}
                         onNodeClick={handleExpandNode}
+                        onLinkClick={handleLinkClick}
                         selectedNodeId={artist?.id}
                     />
                 ) : (

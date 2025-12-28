@@ -227,8 +227,9 @@ export async function getArtist(id: string): Promise<Artist> {
     return response.json()
 }
 
-export async function getColabs(artista: Artist): Promise<Artist[]> {
+export async function getColabs(artista: Artist): Promise<{ collaborators: Artist[], colabsTracks: Record<string, any[]> }> {
     const colabsIDs = new Set<string>();
+    const colabsTracks: Record<string, any[]> = {}; // Map collaborator ID -> List of tracks
 
     // 1. Obtener todos los álbumes del artista
     const albumResponse = await getAlbums(artista.id);
@@ -246,10 +247,26 @@ export async function getColabs(artista: Artist): Promise<Artist[]> {
             );
 
             tracksConArtistaPrincipal.forEach((track: any) => {
+                // track info minimal (id, name, url)
+                const trackInfo = {
+                    id: track.id,
+                    name: track.name,
+                    external_urls: track.external_urls
+                };
+
                 track.artists.forEach((artist: any) => {
                     if (artist.id !== artista.id) {
                         colabsIDs.add(artist.id);
-                        console.log(artist.name)
+
+                        // Add track to this collaborator's list
+                        if (!colabsTracks[artist.id]) {
+                            colabsTracks[artist.id] = [];
+                        }
+                        // Avoid duplicates if logic allows (though different albums might have same track)
+                        // Simple check by ID
+                        if (!colabsTracks[artist.id].some(t => t.id === track.id)) {
+                            colabsTracks[artist.id].push(trackInfo);
+                        }
                     }
                 });
             });
@@ -266,7 +283,7 @@ export async function getColabs(artista: Artist): Promise<Artist[]> {
         allArtists.push(...artists);
     }
 
-    return allArtists;
+    return { collaborators: allArtists, colabsTracks };
 }
 
 
@@ -277,16 +294,24 @@ export async function makeGrafoColabs(artista: Artist): Promise<Grafo> {
     g.setNode(artista.id, artista);
 
     // 1. Obtenemos solo los colaboradores de primer grado.
-    const colabs_grado_1 = await getColabs(artista);
+    const { collaborators, colabsTracks } = await getColabs(artista);
 
-    colabs_grado_1.forEach(colab => {
+    collaborators.forEach(colab => {
         colab.grupo = 1;
         g.setNode(colab.id, colab);
-        g.setEdge(artista.id, colab.id);
+        // Store track info in the edge label
+        g.setEdge(artista.id, colab.id, { tracks: colabsTracks[colab.id] || [] });
     });
 
     const nodos: Nodo[] = g.nodes().map(nodeId => g.node(nodeId));
-    const aristas: Arista[] = g.edges().map(edge => ({ source: edge.v, target: edge.w }));
+    const aristas: Arista[] = g.edges().map(edge => {
+        const edgeData = g.edge(edge.v, edge.w);
+        return {
+            source: edge.v,
+            target: edge.w,
+            tracks: edgeData ? edgeData.tracks : []
+        };
+    });
 
     return {
         nodes: nodos,

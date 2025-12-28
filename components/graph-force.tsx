@@ -11,9 +11,12 @@ interface GraphForceProps {
     links: Arista[];
     onNodeClick: (nodeId: string) => void;
     onHover?: (node: Nodo | null) => void;
+    onLinkClick?: (link: Arista) => void;
+    onHoverLink?: (link: Arista | null) => void;
     width?: number;
     height?: number;
     selectedNodeId?: string | null;
+    hoveredLink?: Arista | null;
 }
 
 // Helper to generate circular alpha map
@@ -33,7 +36,7 @@ function getCircleAlphaMap() {
     return new THREE.CanvasTexture(canvas);
 }
 
-export default function GraphForce({ nodes, links, onNodeClick, onHover, width: propWidth, height: propHeight, selectedNodeId }: GraphForceProps) {
+function GraphForce({ nodes, links, onNodeClick, onHover, onLinkClick, onHoverLink, width: propWidth, height: propHeight, selectedNodeId, hoveredLink }: GraphForceProps) {
     const fgRef = useRef<ForceGraphMethods>();
     const containerRef = useRef<HTMLDivElement>(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -77,15 +80,22 @@ export default function GraphForce({ nodes, links, onNodeClick, onHover, width: 
 
         // Safety timeout to ensure graph is initialized before messing with d3
         const timer = setTimeout(() => {
-            // force graph instance might have d3Force method
-            if (fg.d3Force) {
-                const charge = fg.d3Force('charge');
-                const link = fg.d3Force('link');
+            const currentFg = fgRef.current;
+            if (!currentFg) return;
 
-                if (charge) charge.strength(-100);
-                if (link) link.distance(70);
+            try {
+                // force graph instance might have d3Force method
+                if (currentFg.d3Force) {
+                    const charge = currentFg.d3Force('charge');
+                    const link = currentFg.d3Force('link');
 
-                fg.d3ReheatSimulation();
+                    if (charge) charge.strength(-100);
+                    if (link) link.distance(70);
+
+                    currentFg.d3ReheatSimulation();
+                }
+            } catch (error) {
+                console.warn("Error configuring force simulation:", error);
             }
         }, 100);
 
@@ -130,7 +140,7 @@ export default function GraphForce({ nodes, links, onNodeClick, onHover, width: 
             const borderSprite = new THREE.Sprite(borderMaterial);
             // Slightly larger to create border effect
             borderSprite.scale.set(size * 1.1, size * 1.1, 1);
-            borderSprite.renderOrder = 1; // Render BEHIND
+            borderSprite.renderOrder = 99; // Render BEHIND image but ON TOP of links
             group.add(borderSprite);
 
             // 2. Image Sprite (Foreground)
@@ -144,7 +154,7 @@ export default function GraphForce({ nodes, links, onNodeClick, onHover, width: 
 
             const sprite = new THREE.Sprite(material);
             sprite.scale.set(size, size, 1);
-            sprite.renderOrder = 2; // Render IN FRONT
+            sprite.renderOrder = 100; // Render IN FRONT of everything
             group.add(sprite);
 
             return group;
@@ -209,9 +219,29 @@ export default function GraphForce({ nodes, links, onNodeClick, onHover, width: 
                 nodeLabel={() => ''}
                 nodeThreeObject={nodeThreeObject}
 
+
                 // Interaction
                 onNodeClick={(node) => onNodeClick(node.id as string)}
                 onNodeHover={(node) => onHover && onHover(node as Nodo || null)}
+
+                // Link Interaction
+                linkColor={(link: Arista) => {
+                    if (link === hoveredLink) return '#ffffff'; // White on hover
+                    return 'rgba(255,255,255,0.5)'; // Transparent base
+                }}
+                linkWidth={(link: Arista) => link === hoveredLink ? 0.7 : 0.5}
+                onLinkClick={(link) => onLinkClick && onLinkClick(link as Arista)}
+                onLinkHover={(link) => onHoverLink && onHoverLink(link as Arista || null)}
+
+                // Physics & Drag
+                enableNodeDrag={true}
+                onNodeDragEnd={node => {
+                    if (node.fx) { node.fx = node.x; }
+                    if (node.fy) { node.fy = node.y; }
+                    if (node.fz) { node.fz = node.z; }
+                }} // Optional: lock position after drag if desired, or just let it float. 
+                // The user just said "que vuelva a funcionar el drAg". 
+                // Default behavior is usually fine. I will just add enableNodeDrag={true}.
 
                 // Visuals
                 backgroundColor="rgba(0,0,0,0)"
@@ -227,3 +257,5 @@ export default function GraphForce({ nodes, links, onNodeClick, onHover, width: 
         </div>
     );
 }
+
+export default React.memo(GraphForce);
