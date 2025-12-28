@@ -101,8 +101,11 @@ export default function GraphCard({ nodes, links, onNodeClick, onLinkClick, sele
                     className="graph-tooltip z-50 bg-black/95 text-white p-3 rounded-xl backdrop-blur-md border border-white/10 shadow-lg pointer-events-none"
                     style={{
                         position: 'fixed',
-                        top: `${tooltip.y + 15}px`,
-                        left: `${tooltip.x + 15}px`,
+                        top: `${tooltip.y + 80}px`,
+                        left: `${tooltip.x + 100}px`,
+                        transform: 'translate(-50%, -100%)',
+                        pointerEvents: 'none',
+                        zIndex: 50,
                     }}
                 >
                     {/* NODE TOOLTIP */}

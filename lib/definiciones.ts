@@ -70,8 +70,8 @@ export interface Nodo extends SimulationNodeDatum {
 }
 
 export interface Arista extends SimulationLinkDatum<Nodo> {
-    source: string;
-    target: string;
+    source: string | Nodo;
+    target: string | Nodo;
     tracks?: {
         id: string;
         name: string;

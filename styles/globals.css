@@ -83,15 +83,16 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
 body {
-    /* ... */
-    margin: 0;
-    padding: 0;
+  /* ... */
+  margin: 0;
+  padding: 0;
 }
 
 /* Custom Scrollbar for Tooltips */
@@ -104,12 +105,12 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(0, 0, 0, 0.5);
   border-radius: 20px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.4);
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 /* Legacy tooltip styles removed to relying on Tailwind classes in component */
@@ -120,7 +121,3 @@ body {
   ...
 } 
 */
-
-
-
-

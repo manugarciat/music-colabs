@@ -39,6 +39,7 @@ function getCircleAlphaMap() {
 function GraphForce({ nodes, links, onNodeClick, onHover, onLinkClick, onHoverLink, width: propWidth, height: propHeight, selectedNodeId, hoveredLink }: GraphForceProps) {
     const fgRef = useRef<ForceGraphMethods>();
     const containerRef = useRef<HTMLDivElement>(null);
+    const textureCache = useRef<Map<string, THREE.Texture>>(new Map());
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
     // Track container size for responsive Fullscreen
@@ -70,7 +71,7 @@ function GraphForce({ nodes, links, onNodeClick, onHover, onLinkClick, onHoverLi
 
         const safeLinks = links.map(l => ({ ...l }));
 
-        return { nodes: safeNodes, links: safeLinks };
+        return { nodes: safeNodes, links: safeLinks } as any;
     }, [nodes, links]);
 
     // Physics configuration
@@ -113,17 +114,23 @@ function GraphForce({ nodes, links, onNodeClick, onHover, onLinkClick, onHoverLi
             const imgUrl = node.images[0].url;
 
             // Fix: Load texture with callback to handle aspect ratio and color space
-            const map = new THREE.TextureLoader().load(imgUrl, (texture) => {
-                texture.colorSpace = THREE.SRGBColorSpace;
-                const imageAspect = texture.image.width / texture.image.height;
-                if (imageAspect > 1) {
-                    texture.repeat.set(1 / imageAspect, 1);
-                    texture.offset.set((1 - 1 / imageAspect) / 2, 0);
-                } else {
-                    texture.repeat.set(1, imageAspect);
-                    texture.offset.set(0, (1 - imageAspect) / 2);
-                }
-            });
+            let map = textureCache.current.get(imgUrl);
+
+            if (!map) {
+                map = new THREE.TextureLoader().load(imgUrl, (texture) => {
+                    texture.colorSpace = THREE.SRGBColorSpace;
+                    const imageAspect = texture.image.width / texture.image.height;
+                    // Pre-calculate aspect ratio adjustments
+                    if (imageAspect > 1) {
+                        texture.repeat.set(1 / imageAspect, 1);
+                        texture.offset.set((1 - 1 / imageAspect) / 2, 0);
+                    } else {
+                        texture.repeat.set(1, imageAspect);
+                        texture.offset.set(0, (1 - imageAspect) / 2);
+                    }
+                });
+                textureCache.current.set(imgUrl, map);
+            }
 
             const group = new THREE.Group();
 
