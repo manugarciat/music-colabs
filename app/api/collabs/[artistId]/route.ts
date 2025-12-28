@@ -22,12 +22,13 @@ export async function GET(
       return NextResponse.json({ error: `Artist with ID ${artistId} not found` }, { status: 404 });
     }
 
-    const colaboradores = await getColabs(artista);
+    const { collaborators, colabsTracks } = await getColabs(artista);
 
-    const newNodes = colaboradores;
-    const newLinks = colaboradores.map(colab => ({
+    const newNodes = collaborators;
+    const newLinks = collaborators.map(colab => ({
       source: artistId,
       target: colab.id,
+      tracks: colabsTracks[colab.id] || []
     }));
 
     return NextResponse.json({ newNodes, newLinks });

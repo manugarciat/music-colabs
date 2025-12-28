@@ -66,12 +66,22 @@ export interface Nodo extends SimulationNodeDatum {
     images: ArtistImage[];
     genres: string[];
     popularity: number;
+    followers?: {
+        total: number;
+    };
     expanded?: boolean; // Propiedad opcional para la lógica de expansión
 }
 
 export interface Arista extends SimulationLinkDatum<Nodo> {
-    source: string;
-    target: string;
+    source: string | Nodo;
+    target: string | Nodo;
+    tracks?: {
+        id: string;
+        name: string;
+        external_urls: {
+            spotify: string;
+        }
+    }[];
 }
 
 export type Grafo = {

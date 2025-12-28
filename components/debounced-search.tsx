@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { Search } from 'lucide-react';
 import Image from 'next/image';
 import { Artist } from '@/lib/definiciones';
 
@@ -57,7 +59,15 @@ export default function DebouncedSearch() {
     };
 
     return (
-        <div ref={wrapperRef} className="w-full relative z-50">
+        <div ref={wrapperRef} className="relative w-full z-50 flex flex-col gap-2">
+            <div className="flex items-center justify-between px-1 mb-1.5 mt-0.5">
+                <span className="text-[10px] font-bold text-white/40 tracking-widest uppercase">music colabs</span>
+                <img
+                    src="https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_White.png"
+                    alt="Spotify"
+                    className="opacity-70 h-[21px] w-auto"
+                />
+            </div>
             <div className="relative">
                 <input
                     type="text"
@@ -65,19 +75,19 @@ export default function DebouncedSearch() {
                     onChange={(e) => setTerm(e.target.value)}
                     onFocus={() => term.length > 2 && setShowDropdown(true)}
                     placeholder="Buscar artista..."
-                    className="w-full pl-4 pr-12 py-3 rounded-full bg-white/10 backdrop-blur-md border border-white/10 focus:border-white/30 focus:ring-0 text-white placeholder-white/50 outline-none transition-all shadow-inner"
+                    className="w-full bg-[#18181b]/90 backdrop-blur-md text-white border border-white/10 rounded-2xl px-4 py-2.5 pl-10 focus:outline-none focus:border-[#1DB954] focus:ring-1 focus:ring-[#1DB954] transition-all shadow-lg placeholder:text-white/20 text-sm"
                 />
-                <div className="absolute right-3 top-3 text-white/50">
-                    {loading ? (
-                        <div className="animate-spin h-5 w-5 border-2 border-white/20 border-t-white rounded-full"></div>
-                    ) : (
-                        <MagnifyingGlassIcon className="w-5 h-5" />
-                    )}
-                </div>
+                <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" />
+
+                {loading && (
+                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                        <div className="animate-spin h-3 w-3 border-2 border-white/20 border-t-white rounded-full"></div>
+                    </div>
+                )}
             </div>
 
             {showDropdown && results.length > 0 && (
-                <div className="absolute top-full mt-2 w-full bg-[#1e1e24]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden max-h-[400px] overflow-y-auto">
+                <div className="absolute top-full mt-2 w-full bg-[#1e1e24]/65 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[400px] overflow-y-auto custom-scrollbar">
                     {results.map((artist) => (
                         <button
                             key={artist.id}
