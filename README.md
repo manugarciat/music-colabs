@@ -1,10 +1,10 @@
-# Red de Colaboraciones Musicales
+# Red de Colaboraciones Musicales v2.0
 
 https://music-colabs.vercel.app/
 
 Una herramienta de exploración interactiva para visualizar la red de colaboraciones entre artistas musicales, utilizando la **API de Spotify** y **Three.js**. Comienza con los colaboradores directos de un artista y expande la red nodo por nodo en un entorno 3D, descubriendo conexiones de forma orgánica.
     
-![sparklehorse_danger_mouse.jpg](public/sparklehorse_danger_mouse.jpg)
+![sparklehorse_v2.jpg](public/sparklehorse_v2.jpg)
 
 ## ⚡️ Características
 
@@ -13,6 +13,9 @@ Una herramienta de exploración interactiva para visualizar la red de colaboraci
 -   [x] **Expansión Interactiva:** Haz clic en cualquier nodo para revelar sus colaboradores y expandir el universo musical dinámicamente.
 -   [x] **Metadatos Enriquecidos:** Panel lateral con seguidores, popularidad, géneros y enlaces directos a Spotify.
 -   [x] **Controles de Cámara:** Navegación orbital completa, con botones para pantalla completa y reseteo de vista.
+-   [x] **Reproductor Integrado:** Escucha previews de las colaboraciones (tracks) directamente desde el panel lateral al seleccionar una conexión.
+-   [x] **Exploración de Aristas:** Al pasar el mouse sobre una conexión, se destacan los artistas y se muestra un resumen de sus colaboraciones.
+-   [x] **Gestión Dinámica:** Elimina artistas de la visualización individualmente para limpiar el grafo y enfocar la exploración.
 
 ## 🛠️ Tecnologías Utilizadas
 
