@@ -1,4 +1,4 @@
-import {SimulationLinkDatum, SimulationNodeDatum} from "d3";
+import { SimulationLinkDatum, SimulationNodeDatum } from "d3";
 
 export type ArtistImage = {
     url: string;
@@ -16,6 +16,9 @@ export type Artist = {
     images: ArtistImage[];
     genres: string[];
     popularity: number;
+    followers: {
+        total: number;
+    };
 }
 
 export type ArtistsResponse = {
@@ -50,6 +53,10 @@ export type RelatedResponse = {
 }
 
 export interface Nodo extends SimulationNodeDatum {
+    // 3D coordinates
+    z?: number;
+    vz?: number;
+    fz?: number;
     grupo: number;
     external_urls: {
         spotify: string;
@@ -59,7 +66,7 @@ export interface Nodo extends SimulationNodeDatum {
     images: ArtistImage[];
     genres: string[];
     popularity: number;
-    expanded?: boolean; // <--- AÑADIDO: Propiedad opcional para la lógica de expansión
+    expanded?: boolean; // Propiedad opcional para la lógica de expansión
 }
 
 export interface Arista extends SimulationLinkDatum<Nodo> {
@@ -68,6 +75,6 @@ export interface Arista extends SimulationLinkDatum<Nodo> {
 }
 
 export type Grafo = {
-    nodes: Nodo[];   // <--- CAMBIADO: de 'nodos' a 'nodes'
-    links: Arista[]; // <--- CAMBIADO: de 'aristas' a 'links'
+    nodes: Nodo[];
+    links: Arista[];
 };

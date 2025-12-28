@@ -1,34 +1,49 @@
 // app/page.tsx
+// --- ELIMINAR 'use client' ---
 
 import SearchForm from "@/components/search-form";
-import React, {Suspense} from "react";
-import ArtistCard from "@/components/artist-card";
-import GraphCard from "@/components/graph-card";
-import {Grid} from 'react-loading-icons'
+import React from 'react';
+import { searchArtist, makeGrafoColabs, getArtist } from "@/lib/data";
+import { Nodo, Arista, Artist } from "@/lib/definiciones";
+// --- NUEVO: Importar nuestro nuevo contenedor de cliente ---
+import GraphContainer from "@/components/graph-container";
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ query?: string | undefined }> }) {
-      const resolvedSearchParams = await searchParams;
-      const query = resolvedSearchParams.query;
+export default async function Home(props: { searchParams: Promise<{ query?: string, id?: string }> }) {
+    const searchParams = await props.searchParams;
+    const query = searchParams.query;
+    const id = searchParams.id;
+
+    // --- Obtener los datos iniciales aquí, en el servidor ---
+    let initialArtist: Artist | null = null;
+    let initialGraphData: { nodes: Nodo[], links: Arista[] } | null = null;
+
+    try {
+        if (id) {
+            const artist = await getArtist(id);
+            if (artist && artist.id) {
+                initialArtist = artist;
+                initialGraphData = await makeGrafoColabs(artist);
+            }
+        } else if (query) {
+            const response = await searchArtist(query);
+            if (response.artists?.items[0]) {
+                const artist = response.artists.items[0];
+                initialArtist = artist;
+                initialGraphData = await makeGrafoColabs(artist);
+            }
+        }
+    } catch (error) {
+        console.error("Failed to fetch initial data:", error);
+    }
 
     return (
-        <main className="relative h-screen w-screen overflow-hidden">
-            {/* Contenedor para los controles (tarjeta y búsqueda) */}
-            <div className="absolute top-0 left-0 z-10 p-5">
-                <div className="w-[300px] bg-background/80 backdrop-blur-sm p-4 rounded-lg">
-                    <SearchForm />
-                    <ArtistCard query={query} />
-                </div>
-            </div>
-            <div className="absolute top-0 left-0 w-full h-full">
-                <Suspense key={query} fallback={
-                    <div className="text-center p-10 text">Cargando...
-                    {/*<Grid fill="#000000"/>*/}
-                    </div>}
-                >
-                    <GraphCard query={query}/>
-                </Suspense>
-            </div>
+        <main className="relative h-screen w-screen overflow-hidden bg-gradient-to-br from-[#121212] via-[#1e1e24] to-[#2a2a35] text-white">
+            {/* --- Renderizar el CONTENEDOR DE CLIENTE y pasarle los datos iniciales --- */}
+            <GraphContainer
+                initialArtist={initialArtist}
+                initialGraphData={initialGraphData}
+                query={query}
+            />
         </main>
-    )
+    );
 }
-

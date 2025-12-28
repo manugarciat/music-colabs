@@ -10,7 +10,7 @@ import {
     AlbumsResponse,
     AlbumTracksResponse
 } from "@/lib/definiciones";
-import {Graph} from 'graphlib';
+import { Graph } from 'graphlib';
 
 async function getToken(): Promise<String> {
 
@@ -27,11 +27,11 @@ async function getToken(): Promise<String> {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Authorization': `Basic ${basicAuth}`
         },
-        next: {revalidate: 3570}
+        next: { revalidate: 3570 }
     });
 
     const data = await response.json();
-    const {access_token} = data;
+    const { access_token } = data;
     return access_token
 }
 
@@ -43,7 +43,7 @@ export async function searchArtist(req: string): Promise<ArtistsResponse> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 3600}
+        next: { revalidate: 86400 }
     });
     return response.json()
 
@@ -58,7 +58,7 @@ export async function getRelated(id: string): Promise<RelatedResponse> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 3600}
+        next: { revalidate: 86400 }
     });
 
     if (!response.ok) {
@@ -69,7 +69,7 @@ export async function getRelated(id: string): Promise<RelatedResponse> {
         } catch (e) {
             console.error("Error en la API de Spotify al obtener artistas relacionados:", response.statusText);
         }
-        return {artists: []}; // Devuelve un objeto con un arreglo de artistas vacío
+        return { artists: [] }; // Devuelve un objeto con un arreglo de artistas vacío
     }
 
     return response.json();
@@ -79,16 +79,17 @@ export async function getAlbums(id: string): Promise<AlbumsResponse> {
 
     const token = await getToken();
 
-    const response = await fetch(`https://api.spotify.com/v1/artists/${id}/albums`, { // Pido 50 para tener más datos
+    // Pido todos menos compilaciones
+    const response = await fetch(`https://api.spotify.com/v1/artists/${id}/albums?include_groups=album,single,appears_on&limit=50`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 3600}
+        next: { revalidate: 86400 }
     });
 
     if (!response.ok) {
         console.error(`Error en API al obtener álbumes para el artista ${id}:`, await response.text());
-        return {items: []}; // Devuelve un objeto con un arreglo de items vacío
+        return { items: [] }; // Devuelve un objeto con un arreglo de items vacío
     }
 
     return response.json();
@@ -97,20 +98,50 @@ export async function getAlbums(id: string): Promise<AlbumsResponse> {
 export async function getTracks(id_album: String): Promise<AlbumTracksResponse> {
 
     const token = await getToken();
-
+    // aca se podrian pedir todos los albums del artista en bulk con Get Several Albums
     const response = await fetch(`https://api.spotify.com/v1/albums/${id_album}/tracks`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 3600}
+        next: { revalidate: 86400 }
     });
 
     if (!response.ok) {
         console.error(`Error en API al obtener tracks para el album ${id_album}:`, await response.text());
-        return {items: []}; // Devuelve un objeto con un arreglo de items vacío
+        return { items: [] }; // Devuelve un objeto con un arreglo de items vacío
     }
 
     return response.json();
+}
+
+async function getMultipleAlbums(albumIds: string[]): Promise<any[]> { // Usamos 'any' por simplicidad, la API devuelve un objeto complejo
+    if (albumIds.length === 0) return [];
+
+    const token = await getToken();
+    const allAlbumDetails = [];
+    const chunkSize = 20; // Límite de la API de Spotify
+
+    // Dividir las IDs de álbumes en lotes de 20
+    for (let i = 0; i < albumIds.length; i += chunkSize) {
+        const chunk = albumIds.slice(i, i + chunkSize);
+        const idsString = chunk.join(',');
+
+        const response = await fetch(`https://api.spotify.com/v1/albums?ids=${idsString}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            next: { revalidate: 3600 }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            allAlbumDetails.push(...data.albums);
+        } else {
+            console.error(`Error en API al obtener lote de álbumes:`, await response.text());
+        }
+    }
+
+    return allAlbumDetails;
 }
 
 
@@ -154,7 +185,7 @@ export async function makeGrafo(artista: Artist): Promise<Grafo> {
 
     let aristas: Arista[] = []
     artistas_grado_1.forEach(artista_grado_1 => {
-        const arista: Arista = {source: artista.id, target: artista_grado_1.id};
+        const arista: Arista = { source: artista.id, target: artista_grado_1.id };
         aristas.push(arista)
     })
 
@@ -165,7 +196,7 @@ export async function makeGrafo(artista: Artist): Promise<Grafo> {
         //agrego aristas para los artistas de segundo grado
         artistas_grado_2.artists.forEach(artista_grado_2 => {
             if (artista_grado_2.id != artista.id) {
-                const arista: Arista = {source: artista_grado_1.id, target: artista_grado_2.id};
+                const arista: Arista = { source: artista_grado_1.id, target: artista_grado_2.id };
                 aristas.push(arista)
             }
         })
@@ -185,39 +216,40 @@ export async function makeGrafo(artista: Artist): Promise<Grafo> {
     };
 }
 
-export async function getArtist(id: String): Promise<Artist> {
+export async function getArtist(id: string): Promise<Artist> {
     const token = await getToken();
     const response = await fetch(`https://api.spotify.com/v1/artists/${id}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 3600}
+        next: { revalidate: 86400 }
     });
     return response.json()
 }
 
 export async function getColabs(artista: Artist): Promise<Artist[]> {
     const colabsIDs = new Set<string>();
+
+    // 1. Obtener todos los álbumes del artista
     const albumResponse = await getAlbums(artista.id);
-    const albums_artista = albumResponse.items;
+    const albumIds = albumResponse.items.map(album => album.id);
 
-    const trackPromises = albums_artista.map(album => getTracks(album.id));
-    const trackResponses = await Promise.all(trackPromises);
+    // 2. OBTENER TODOS LOS ÁLBUMES Y SUS PISTAS EN LOTES
+    const albumsConTracks = await getMultipleAlbums(albumIds as string[]);
 
-    trackResponses.forEach(trackResponse => {
-        if (trackResponse && trackResponse.items) {
-
-            // 1. Filtramos primero: nos quedamos solo con las canciones donde aparece nuestro artista principal.
-            const tracksConArtistaPrincipal = trackResponse.items.filter(track =>
-                track.artists.some(artist => artist.id === artista.id)
+    // 3. Procesar las pistas de los álbumes obtenidos
+    albumsConTracks.forEach(album => {
+        // El objeto album ya contiene la primera página de pistas
+        if (album && album.tracks && album.tracks.items) {
+            const tracksConArtistaPrincipal = album.tracks.items.filter((track: any) =>
+                track.artists.some((artist: any) => artist.id === artista.id)
             );
 
-            // 2. Ahora, solo iteramos sobre esas canciones filtradas.
-            tracksConArtistaPrincipal.forEach(track => {
-                // 3. De cada una de esas canciones, extraemos a los OTROS artistas.
-                track.artists.forEach(artist => {
+            tracksConArtistaPrincipal.forEach((track: any) => {
+                track.artists.forEach((artist: any) => {
                     if (artist.id !== artista.id) {
                         colabsIDs.add(artist.id);
+                        console.log(artist.name)
                     }
                 });
             });
@@ -226,6 +258,7 @@ export async function getColabs(artista: Artist): Promise<Artist[]> {
 
     const idArray = Array.from(colabsIDs);
 
+    // Obtener los detalles de los artistas colaboradores
     const allArtists = [];
     for (let i = 0; i < idArray.length; i += 50) {
         const chunk = idArray.slice(i, i + 50);
@@ -270,7 +303,7 @@ async function getArtists(ids: string[]): Promise<Artist[]> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 3600}
+        next: { revalidate: 86400 }
     });
 
     if (!response.ok) {
