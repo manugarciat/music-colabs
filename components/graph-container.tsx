@@ -7,6 +7,7 @@ import DebouncedSearch from "@/components/debounced-search";
 import ArtistCard from "@/components/artist-card";
 import GraphCard from "@/components/graph-card";
 import CollabPanel from "@/components/collab-panel";
+import HelpPanel from "@/components/help-panel";
 import { Nodo, Arista, Artist } from "@/lib/definiciones";
 
 // Props que recibe del Server Component
@@ -69,6 +70,9 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
         }
     }
 
+    // Helper to get ID whether source/target is string or object (d3 mutation)
+    const getID = (val: string | Nodo) => (typeof val === 'object' ? val.id : val);
+
     return (
         <>
             <div className="absolute top-0 left-0 z-10 p-5 h-full pointer-events-none flex flex-col justify-between">
@@ -79,31 +83,31 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                 </div>
 
                 {/* Bottom Section: Collab Panel */}
-                {selectedCollab && graphData && (
-                    <div className="pointer-events-auto mt-4">
-                        {(() => {
-                            // Helper to get ID whether source/target is string or object (d3 mutation)
-                            const getID = (val: string | Nodo) => (typeof val === 'object' ? val.id : val);
+                <div className="pointer-events-auto mt-4">
+                    {selectedCollab && graphData && (() => {
+                        const sID = getID(selectedCollab.source as any);
+                        const tID = getID(selectedCollab.target as any);
+                        const sNode = graphData.nodes.find(n => n.id === sID);
+                        const tNode = graphData.nodes.find(n => n.id === tID);
 
-                            const sourceID = getID(selectedCollab.source as any);
-                            const targetID = getID(selectedCollab.target as any);
-
-                            const sourceNode = graphData.nodes.find(n => n.id === sourceID);
-                            const targetNode = graphData.nodes.find(n => n.id === targetID);
-
-                            if (!sourceNode || !targetNode) return null;
-
+                        if (sNode && tNode) {
                             return (
                                 <CollabPanel
-                                    source={sourceNode}
-                                    target={targetNode}
+                                    source={sNode}
+                                    target={tNode}
                                     tracks={selectedCollab.tracks || []}
                                     onClose={() => setSelectedCollab(null)}
                                 />
                             );
-                        })()}
-                    </div>
-                )}
+                        }
+                        return null;
+                    })()}
+                </div>
+            </div>
+
+            {/* Help Panel */}
+            <div className="absolute bottom-5 right-5 z-10 pointer-events-auto">
+                <HelpPanel />
             </div>
 
             <div className="absolute top-0 left-0 w-full h-full">
