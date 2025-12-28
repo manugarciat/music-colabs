@@ -57,9 +57,7 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                     genres: node.genres || [],
                     popularity: node.popularity || 0,
                     followers: node.followers || { total: 0 },
-                    external_urls: (node as any).external_urls || { spotify: `https://open.spotify.com/artist/${node.id}` },
-                    href: '',
-                    uri: '',
+                    external_urls: node.external_urls || { spotify: `https://open.spotify.com/artist/${node.id}` },
                     type: 'artist'
                 };
 

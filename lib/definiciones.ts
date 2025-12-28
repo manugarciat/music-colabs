@@ -66,6 +66,9 @@ export interface Nodo extends SimulationNodeDatum {
     images: ArtistImage[];
     genres: string[];
     popularity: number;
+    followers?: {
+        total: number;
+    };
     expanded?: boolean; // Propiedad opcional para la lógica de expansión
 }
 
