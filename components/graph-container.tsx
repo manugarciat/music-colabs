@@ -58,7 +58,7 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                     popularity: node.popularity || 0,
                     followers: node.followers || { total: 0 },
                     external_urls: node.external_urls || { spotify: `https://open.spotify.com/artist/${node.id}` },
-                    type: 'artist'
+                    grupo: node.grupo || 0
                 };
 
                 setSelectedArtists(current => {
