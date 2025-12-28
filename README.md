@@ -2,25 +2,25 @@
 
 https://music-colabs.vercel.app/
 
-Una herramienta de exploración interactiva para visualizar la red de colaboraciones entre artistas musicales, utilizando la API de Spotify y D3.js. Comienza con los colaboradores directos de un artista y expande la red nodo por nodo con cada clic, descubriendo conexiones musicales de una forma orgánica.
+Una herramienta de exploración interactiva para visualizar la red de colaboraciones entre artistas musicales, utilizando la **API de Spotify** y **Three.js**. Comienza con los colaboradores directos de un artista y expande la red nodo por nodo en un entorno 3D, descubriendo conexiones de forma orgánica.
     
-![david_lynch_alva_noto.png](public/david_lynch_alva_noto.png)
+![sparklehorse_danger_mouse.jpg](public/sparklehorse_danger_mouse.jpg)
 
 ## ⚡️ Características
 
--   [x] **Búsqueda de Artistas:** Encuentra cualquier artista disponible en la base de datos de Spotify.
--   [x] **Expansión Interactiva del Grafo:** Empieza con los colaboradores directos y expande la red al hacer clic en cualquier artista, creando una visualización única en cada exploración.
--   [x] **Renderizado de Alto Rendimiento:** Utiliza **HTML Canvas** para renderizar grafos con cientos de nodos de forma fluida y sin caídas de rendimiento.
--   [x] **Grafo Interactivo:** Arrastra los nodos para explorar la red a tu gusto.
--   [x] **Tooltips Informativos:** Pasa el ratón sobre cualquier artista para ver su foto, nombre y nivel de popularidad.
--   [x] **Diseño:** Interfaz constuida con Next.js y Tailwind CSS.
+-   [x] **Búsqueda:** Buscador predictivo con sugerencias en tiempo real y navegación directa por ID.
+-   [x] **Visualización 3D Inmersiva:** Explora la red en un espacio tridimensional ("Galaxy View") renderizado con **Three.js** y **WebGL**.
+-   [x] **Expansión Interactiva:** Haz clic en cualquier nodo para revelar sus colaboradores y expandir el universo musical dinámicamente.
+-   [x] **Metadatos Enriquecidos:** Panel lateral con seguidores, popularidad, géneros y enlaces directos a Spotify.
+-   [x] **Controles de Cámara:** Navegación orbital completa, con botones para pantalla completa y reseteo de vista.
 
 ## 🛠️ Tecnologías Utilizadas
 
--   **Framework:** [Next.js](https://nextjs.org/) (React)
+-   **Framework:** [Next.js 15](https://nextjs.org/) (React 19)
 -   **Lenguaje:** [TypeScript](https://www.typescriptlang.org/)
--   **Visualización de Datos:** [D3.js](https://d3js.org/) (`d3-force`, `d3-scale`)
+-   **Visualización 3D:** [react-force-graph-3d](https://github.com/vasturiano/react-force-graph) (Three.js engine)
 -   **Estilos:** [Tailwind CSS](https://tailwindcss.com/)
+-   **Iconos:** [Lucide React](https://lucide.dev/)
 -   **API:** [Spotify Web API](https://developer.spotify.com/documentation/web-api)
 -   **Deployment:** [Vercel](https://vercel.com/)
 

@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Oval } from 'react-loading-icons';
-import SearchForm from "@/components/search-form";
+import DebouncedSearch from "@/components/debounced-search";
 import ArtistCard from "@/components/artist-card";
 import GraphCard from "@/components/graph-card";
 import { Nodo, Arista, Artist } from "@/lib/definiciones";
@@ -63,7 +63,7 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
         <>
             <div className="absolute top-0 left-0 z-10 p-5 h-full pointer-events-none">
                 <div className="w-[340px] h-full overflow-y-auto pointer-events-auto pr-2 pb-10">
-                    <SearchForm />
+                    <DebouncedSearch />
                     <ArtistCard artist={artist} />
 
 
@@ -80,6 +80,7 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                         nodes={graphData.nodes}
                         links={graphData.links}
                         onNodeClick={handleExpandNode}
+                        selectedNodeId={artist?.id}
                     />
                 ) : (
                     <div className="flex items-center justify-center h-full">Busca un artista para empezar</div>

@@ -12,9 +12,10 @@ interface GraphCardProps {
     nodes: Nodo[];
     links: Arista[];
     onNodeClick: (nodeId: string) => void;
+    selectedNodeId?: string | null;
 }
 
-export default function GraphCard({ nodes, links, onNodeClick }: GraphCardProps) {
+export default function GraphCard({ nodes, links, onNodeClick, selectedNodeId }: GraphCardProps) {
     const [hoverInfo, setHoverInfo] = useState<{ node: any | null, x: number, y: number }>({ node: null, x: 0, y: 0 });
 
     const handleMouseMove = (e: React.MouseEvent) => {
@@ -33,6 +34,7 @@ export default function GraphCard({ nodes, links, onNodeClick }: GraphCardProps)
                 links={links}
                 onHover={(node) => setHoverInfo(prev => ({ ...prev, node }))}
                 onNodeClick={onNodeClick}
+                selectedNodeId={selectedNodeId}
             />
             {hoverInfo.node && (
                 <div className="graph-tooltip z-50 bg-black/80 text-white p-3 rounded backdrop-blur-md border border-white/10"

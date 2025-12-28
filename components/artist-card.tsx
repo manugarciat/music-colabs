@@ -7,7 +7,7 @@ import { Artist } from "@/lib/definiciones";
 
 export default function ArtistCard({ artist }: { artist: Artist | null }) {
     if (!artist) {
-        return null; // O un placeholder si lo prefieres
+        return null;
     }
     return (
         <div className="mt-4 p-6 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl text-white">
@@ -27,6 +27,20 @@ export default function ArtistCard({ artist }: { artist: Artist | null }) {
                 <p className="text-xs uppercase tracking-widest opacity-70 mb-4 font-medium">
                     ID: {artist.id}
                 </p>
+
+                <div className="flex items-center gap-4 mb-4 w-full justify-center">
+                    <div className="text-center">
+                        <p className="text-xs text-white/50 uppercase tracking-wider">Seguidores</p>
+                        <p className="font-bold text-lg">{artist.followers?.total?.toLocaleString() || 'N/A'}</p>
+                    </div>
+                    <div className="h-8 w-px bg-white/10"></div>
+                    <div className="text-center">
+                        <p className="text-xs text-white/50 uppercase tracking-wider">Popularidad</p>
+                        <div className="flex items-center gap-2 justify-center">
+                            <p className="font-bold text-lg">{artist.popularity}%</p>
+                        </div>
+                    </div>
+                </div>
 
                 <div className="w-full flex flex-wrap gap-2 justify-center mb-6">
                     {artist.genres?.slice(0, 4).map((genre) => (

@@ -10,7 +10,7 @@ import {
     AlbumsResponse,
     AlbumTracksResponse
 } from "@/lib/definiciones";
-import {Graph} from 'graphlib';
+import { Graph } from 'graphlib';
 
 async function getToken(): Promise<String> {
 
@@ -27,11 +27,11 @@ async function getToken(): Promise<String> {
             'Content-Type': 'application/x-www-form-urlencoded',
             'Authorization': `Basic ${basicAuth}`
         },
-        next: {revalidate: 3570}
+        next: { revalidate: 3570 }
     });
 
     const data = await response.json();
-    const {access_token} = data;
+    const { access_token } = data;
     return access_token
 }
 
@@ -43,7 +43,7 @@ export async function searchArtist(req: string): Promise<ArtistsResponse> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 86400}
+        next: { revalidate: 86400 }
     });
     return response.json()
 
@@ -58,7 +58,7 @@ export async function getRelated(id: string): Promise<RelatedResponse> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 86400}
+        next: { revalidate: 86400 }
     });
 
     if (!response.ok) {
@@ -69,7 +69,7 @@ export async function getRelated(id: string): Promise<RelatedResponse> {
         } catch (e) {
             console.error("Error en la API de Spotify al obtener artistas relacionados:", response.statusText);
         }
-        return {artists: []}; // Devuelve un objeto con un arreglo de artistas vacío
+        return { artists: [] }; // Devuelve un objeto con un arreglo de artistas vacío
     }
 
     return response.json();
@@ -84,12 +84,12 @@ export async function getAlbums(id: string): Promise<AlbumsResponse> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 86400}
+        next: { revalidate: 86400 }
     });
 
     if (!response.ok) {
         console.error(`Error en API al obtener álbumes para el artista ${id}:`, await response.text());
-        return {items: []}; // Devuelve un objeto con un arreglo de items vacío
+        return { items: [] }; // Devuelve un objeto con un arreglo de items vacío
     }
 
     return response.json();
@@ -103,12 +103,12 @@ export async function getTracks(id_album: String): Promise<AlbumTracksResponse> 
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 86400}
+        next: { revalidate: 86400 }
     });
 
     if (!response.ok) {
         console.error(`Error en API al obtener tracks para el album ${id_album}:`, await response.text());
-        return {items: []}; // Devuelve un objeto con un arreglo de items vacío
+        return { items: [] }; // Devuelve un objeto con un arreglo de items vacío
     }
 
     return response.json();
@@ -185,7 +185,7 @@ export async function makeGrafo(artista: Artist): Promise<Grafo> {
 
     let aristas: Arista[] = []
     artistas_grado_1.forEach(artista_grado_1 => {
-        const arista: Arista = {source: artista.id, target: artista_grado_1.id};
+        const arista: Arista = { source: artista.id, target: artista_grado_1.id };
         aristas.push(arista)
     })
 
@@ -196,7 +196,7 @@ export async function makeGrafo(artista: Artist): Promise<Grafo> {
         //agrego aristas para los artistas de segundo grado
         artistas_grado_2.artists.forEach(artista_grado_2 => {
             if (artista_grado_2.id != artista.id) {
-                const arista: Arista = {source: artista_grado_1.id, target: artista_grado_2.id};
+                const arista: Arista = { source: artista_grado_1.id, target: artista_grado_2.id };
                 aristas.push(arista)
             }
         })
@@ -216,13 +216,13 @@ export async function makeGrafo(artista: Artist): Promise<Grafo> {
     };
 }
 
-export async function getArtist(id: String): Promise<Artist> {
+export async function getArtist(id: string): Promise<Artist> {
     const token = await getToken();
     const response = await fetch(`https://api.spotify.com/v1/artists/${id}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 86400}
+        next: { revalidate: 86400 }
     });
     return response.json()
 }
@@ -303,7 +303,7 @@ async function getArtists(ids: string[]): Promise<Artist[]> {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-        next: {revalidate: 86400}
+        next: { revalidate: 86400 }
     });
 
     if (!response.ok) {
