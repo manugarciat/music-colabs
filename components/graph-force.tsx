@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useRef, useEffect, useMemo, useCallback, useState } from 'react';
 import ForceGraph3D, { ForceGraphMethods } from 'react-force-graph-3d';
 import { Nodo, Arista } from '@/lib/definiciones';
 import * as THREE from 'three';
@@ -33,8 +33,23 @@ function getCircleAlphaMap() {
     return new THREE.CanvasTexture(canvas);
 }
 
-export default function GraphForce({ nodes, links, onNodeClick, onHover, width, height, selectedNodeId }: GraphForceProps) {
+export default function GraphForce({ nodes, links, onNodeClick, onHover, width: propWidth, height: propHeight, selectedNodeId }: GraphForceProps) {
     const fgRef = useRef<ForceGraphMethods>();
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+    // Track container size for responsive Fullscreen
+    useEffect(() => {
+        if (!containerRef.current) return;
+
+        const resizeObserver = new ResizeObserver((entries) => {
+            const { width, height } = entries[0].contentRect;
+            setDimensions({ width, height });
+        });
+
+        resizeObserver.observe(containerRef.current);
+        return () => resizeObserver.disconnect();
+    }, []);
 
     // Create the alpha map once
     const alphaMap = useMemo(() => getCircleAlphaMap(), []);
@@ -87,6 +102,7 @@ export default function GraphForce({ nodes, links, onNodeClick, onHover, width, 
         if (node.images && node.images.length > 0) {
             const imgUrl = node.images[0].url;
 
+            // Fix: Load texture with callback to handle aspect ratio and color space
             const map = new THREE.TextureLoader().load(imgUrl, (texture) => {
                 texture.colorSpace = THREE.SRGBColorSpace;
                 const imageAspect = texture.image.width / texture.image.height;
@@ -147,7 +163,6 @@ export default function GraphForce({ nodes, links, onNodeClick, onHover, width, 
     }, [alphaMap, selectedNodeId]); // Re-create when selection changes
 
 
-
     const handleFullscreen = () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen();
@@ -168,7 +183,7 @@ export default function GraphForce({ nodes, links, onNodeClick, onHover, width, 
     };
 
     return (
-        <div className="relative w-full h-full">
+        <div ref={containerRef} className="relative w-full h-full bg-black">
             <div className="absolute top-5 right-5 z-50 flex flex-col gap-2">
                 <button
                     onClick={handleResetView}
@@ -188,8 +203,8 @@ export default function GraphForce({ nodes, links, onNodeClick, onHover, width, 
 
             <ForceGraph3D
                 ref={fgRef}
-                width={width}
-                height={height}
+                width={dimensions.width || propWidth} // Use observed width if available
+                height={dimensions.height || propHeight}
                 graphData={graphData}
                 nodeLabel={() => ''}
                 nodeThreeObject={nodeThreeObject}

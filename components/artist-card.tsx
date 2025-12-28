@@ -10,7 +10,7 @@ export default function ArtistCard({ artist }: { artist: Artist | null }) {
         return null;
     }
     return (
-        <div className="mt-4 p-6 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl text-white">
+        <div className="mt-4 p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 shadow-xl text-white">
             <div className="flex flex-col items-center">
                 {artist.images && artist.images.length > 0 && (
                     <div className="relative w-32 h-32 mb-4 rounded-full overflow-hidden border-4 border-white/20 shadow-lg">

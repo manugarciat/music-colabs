@@ -65,7 +65,7 @@ export default function DebouncedSearch() {
                     onChange={(e) => setTerm(e.target.value)}
                     onFocus={() => term.length > 2 && setShowDropdown(true)}
                     placeholder="Buscar artista..."
-                    className="w-full pl-4 pr-12 py-3 rounded-full bg-white/10 backdrop-blur-md border border-white/10 focus:border-white/30 focus:ring-0 text-white placeholder-white/50 outline-none transition-all shadow-inner"
+                    className="w-full pl-4 pr-12 py-3 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10 focus:border-white/30 focus:ring-0 text-white placeholder-white/50 outline-none transition-all shadow-inner"
                 />
                 <div className="absolute right-3 top-3 text-white/50">
                     {loading ? (
