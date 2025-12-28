@@ -24,7 +24,7 @@ export default function CollabPanel({ source, target, tracks, onClose }: CollabP
     }, [source.id, target.id]);
 
     return (
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 w-[340px] flex flex-col gap-4 shadow-2xl animate-in slide-in-from-left-4 duration-300">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex flex-col gap-4 shadow-2xl animate-in slide-in-from-left-4 duration-300">
             {/* Header: Artists */}
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
                 <div className="flex items-center gap-3">
