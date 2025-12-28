@@ -16,7 +16,6 @@ interface GraphForceProps {
     selectedNodeId?: string | null;
 }
 
-// Helper to generate alpha maps
 // Helper to generate circular alpha map
 function getCircleAlphaMap() {
     if (typeof document === 'undefined') return null;
@@ -87,10 +86,22 @@ export default function GraphForce({ nodes, links, onNodeClick, onHover, width, 
         // Image Sprite
         if (node.images && node.images.length > 0) {
             const imgUrl = node.images[0].url;
-            const map = new THREE.TextureLoader().load(imgUrl);
+
+            const map = new THREE.TextureLoader().load(imgUrl, (texture) => {
+                texture.colorSpace = THREE.SRGBColorSpace;
+                const imageAspect = texture.image.width / texture.image.height;
+                if (imageAspect > 1) {
+                    texture.repeat.set(1 / imageAspect, 1);
+                    texture.offset.set((1 - 1 / imageAspect) / 2, 0);
+                } else {
+                    texture.repeat.set(1, imageAspect);
+                    texture.offset.set(0, (1 - imageAspect) / 2);
+                }
+            });
 
             const group = new THREE.Group();
-            const size = Math.max(12, (node.popularity || 0) / 3);
+
+            const size = 5 + ((node.popularity || 0) * 0.25);
 
             // 1. Border Sprite (Background Disk)
             const borderMaterial = new THREE.SpriteMaterial({
