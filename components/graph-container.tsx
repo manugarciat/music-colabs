@@ -25,6 +25,8 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
 
     const [graphData, setGraphData] = useState<{ nodes: Nodo[], links: Arista[] } | null>(initialGraphData);
     const [isLoading, setIsLoading] = useState(false);
+    const [loadingArtist, setLoadingArtist] = useState<{ id: string; name: string } | null>(null);
+    const [expandingArtistName, setExpandingArtistName] = useState<string | null>(null);
     const [selectedCollab, setSelectedCollab] = useState<Arista | null>(null);
 
     // Sincronizar el estado si la búsqueda cambia (cuando Next.js navega)
@@ -37,6 +39,7 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
             setExpandedArtistId(null);
         }
         setGraphData(initialGraphData);
+        setLoadingArtist(null);
     }, [initialArtist, initialGraphData]);
 
     // --- Lógica de expansión, ahora vive aquí ---
@@ -84,29 +87,40 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
             return { ...prev, nodes: prev.nodes.map(n => n.id === nodeId ? { ...n, expanded: true } : n) };
         });
 
-        // Hacemos un 'fetch' a nuestra propia API Route...
-        // de obtener datos desde un Componente de Cliente.
-        const response = await fetch(`/api/collabs/${nodeId}`);
-        const { newNodes, newLinks } = await response.json();
+        const node = graphData?.nodes.find(n => n.id === nodeId);
+        if (node) {
+            setExpandingArtistName(node.name);
+        }
 
-        setGraphData(prev => {
-            if (!prev) return null;
-            const existingNodeIds = new Set(prev.nodes.map(n => n.id));
-            const uniqueNewNodes = newNodes.filter((n: Nodo) => !existingNodeIds.has(n.id));
+        try {
+            // Hacemos un 'fetch' a nuestra propia API Route...
+            // de obtener datos desde un Componente de Cliente.
+            const response = await fetch(`/api/collabs/${nodeId}`);
+            if (!response.ok) throw new Error("Failed to fetch collabs");
+            const { newNodes, newLinks } = await response.json();
 
-            // Deduplicate edges: only add if neither direction exists
-            const existingLinks = new Set(prev.links.map(l => `${l.source}-${l.target}`));
-            const uniqueNewLinks = newLinks.filter((l: Arista) =>
-                !existingLinks.has(`${l.source}-${l.target}`) &&
-                !existingLinks.has(`${l.target}-${l.source}`)
-            );
+            setGraphData(prev => {
+                if (!prev) return null;
+                const existingNodeIds = new Set(prev.nodes.map(n => n.id));
+                const uniqueNewNodes = (newNodes || []).filter((n: Nodo) => !existingNodeIds.has(n.id));
 
-            return {
-                nodes: [...prev.nodes, ...uniqueNewNodes],
-                links: [...prev.links, ...uniqueNewLinks]
-            };
-        });
+                // Deduplicate edges: only add if neither direction exists
+                const existingLinks = new Set(prev.links.map(l => `${l.source}-${l.target}`));
+                const uniqueNewLinks = (newLinks || []).filter((l: Arista) =>
+                    !existingLinks.has(`${l.source}-${l.target}`) &&
+                    !existingLinks.has(`${l.target}-${l.source}`)
+                );
 
+                return {
+                    nodes: [...prev.nodes, ...uniqueNewNodes],
+                    links: [...prev.links, ...uniqueNewLinks]
+                };
+            });
+        } catch (error) {
+            console.error("Error expanding node:", error);
+        } finally {
+            setExpandingArtistName(null);
+        }
     };
 
     const handleRemoveNode = (nodeId: string) => {
@@ -174,7 +188,9 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                 <div className="w-[340px] h-full pointer-events-auto flex flex-col gap-3 pr-1">
                     {/* Fixed Search - No scroll */}
                     <div className="flex-shrink-0 z-20">
-                        <DebouncedSearch />
+                        <DebouncedSearch onSelectArtist={(artist) => {
+                            setLoadingArtist({ id: artist.id, name: artist.name });
+                        }} />
                     </div>
 
                     {/* Scrollable Container (Artists + Collab Panel) */}
@@ -219,12 +235,52 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                 <HelpPanel />
             </div>
 
-            <div className="absolute top-0 left-0 w-full h-full">
-                {isLoading ? (
-                    <div className="flex items-center justify-center h-full">
-                        <Oval stroke="#c72f4e" strokeWidth={3} height="3em" />
+            {/* Floating Toast: Expanding artist collabs */}
+            {expandingArtistName && (
+                <div className="absolute top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-none transition-all duration-300">
+                    <div className="flex items-center gap-3 bg-[#18181b]/95 backdrop-blur-xl text-white text-xs px-4 py-2.5 rounded-full border border-white/15 shadow-2xl">
+                        <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-[#1DB954] rounded-full animate-spin"></div>
+                        <span>Explorando colaboraciones de <strong className="text-[#1DB954] font-semibold">{expandingArtistName}</strong>...</span>
                     </div>
-                ) : graphData ? (
+                </div>
+            )}
+
+            {/* Fullscreen Overlay: Loading initial artist graph */}
+            {(loadingArtist || isLoading) && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md transition-all duration-300">
+                    <div className="bg-[#18181b]/95 border border-white/10 p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-4 text-center max-w-sm mx-4 backdrop-blur-xl">
+                        <div className="relative flex items-center justify-center w-16 h-16">
+                            <div className="w-16 h-16 rounded-full border-2 border-white/10 border-t-[#1DB954] animate-spin"></div>
+                            <div className="absolute w-10 h-10 rounded-full bg-[#1DB954]/20 blur-md animate-pulse"></div>
+                            <div className="absolute w-3 h-3 rounded-full bg-[#1DB954]"></div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <h3 className="text-base font-semibold text-white tracking-wide">
+                                Generando red musical
+                            </h3>
+                            <p className="text-xs text-white/60 leading-relaxed">
+                                {loadingArtist ? (
+                                    <>
+                                        Obteniendo colaboraciones de{" "}
+                                        <span className="text-[#1DB954] font-medium">{loadingArtist.name}</span>...
+                                    </>
+                                ) : (
+                                    "Analizando álbumes y pistas..."
+                                )}
+                            </p>
+                        </div>
+
+                        {/* Indeterminate progress bar */}
+                        <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden mt-1">
+                            <div className="h-full bg-gradient-to-r from-transparent via-[#1DB954] to-transparent w-full animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="absolute top-0 left-0 w-full h-full">
+                {graphData ? (
                     <GraphCard
                         key={query} // Reset graph on new query
                         nodes={graphData.nodes}
@@ -233,9 +289,17 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                         onLinkClick={handleLinkClick}
                         selectedNodeId={expandedArtistId}
                     />
-                ) : (
-                    <div className="flex items-center justify-center h-full">Busca un artista para empezar</div>
-                )}
+                ) : !loadingArtist && !isLoading ? (
+                    <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-4 pointer-events-none">
+                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <h3 className="text-sm font-medium text-white/70">Busca un artista para empezar</h3>
+                        <p className="text-xs text-white/35 max-w-xs">Escribe en el buscador para visualizar y explorar su red de colaboraciones.</p>
+                    </div>
+                ) : null}
             </div>
         </>
     );
