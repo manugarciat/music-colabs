@@ -8,6 +8,7 @@ import ArtistCard from "@/components/artist-card";
 import GraphCard from "@/components/graph-card";
 import CollabPanel from "@/components/collab-panel";
 import HelpPanel from "@/components/help-panel";
+import GraphMetrics from "@/components/graph-metrics";
 import { Nodo, Arista, Artist } from "@/lib/definiciones";
 
 // Props que recibe del Server Component
@@ -28,31 +29,112 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
     const [loadingArtist, setLoadingArtist] = useState<{ id: string; name: string } | null>(null);
     const [expandingArtistName, setExpandingArtistName] = useState<string | null>(null);
     const [selectedCollab, setSelectedCollab] = useState<Arista | null>(null);
+    const [logs, setLogs] = useState<LogEntry[]>([]);
+
+    const addLog = React.useCallback((tag: string, message: string, level: LogEntry['level'] = 'info', detail?: string) => {
+        const now = new Date();
+        const timestamp = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
+        setLogs(prev => [
+            ...prev.slice(-120), // Conservar últimos 120 logs
+            {
+                id: Math.random().toString(36).substring(2, 9),
+                timestamp,
+                tag,
+                message,
+                level,
+                detail
+            }
+        ]);
+    }, []);
 
     // Sincronizar el estado si la búsqueda cambia (cuando Next.js navega)
     useEffect(() => {
         if (initialArtist) {
             setSelectedArtists([initialArtist]);
             setExpandedArtistId(initialArtist.id);
+            addLog('ROOT_RESOLVE', `Root vertex loaded: "${initialArtist.name}"`, 'accent', `ID: ${initialArtist.id} | Popularity: ${initialArtist.popularity}%`);
+            
+            if (initialGraphData) {
+                const sampleColabs = initialGraphData.nodes
+                    .filter(n => n.id !== initialArtist.id)
+                    .slice(0, 5)
+                    .map(n => n.name)
+                    .join(', ');
+                addLog('TOPOLOGY', `Graph initialized: ${initialGraphData.nodes.length} nodes, ${initialGraphData.links.length} edges`, 'matrix', sampleColabs ? `Collaborators: ${sampleColabs}...` : undefined);
+                addLog('FORCE_LAYOUT', '3D spatial simulation active (charge: -100, linkDist: 70)', 'success');
+            }
         } else {
             setSelectedArtists([]);
             setExpandedArtistId(null);
+            addLog('SYSTEM', 'Graph runtime standing by. Enter an artist name to begin traversal.', 'info');
         }
         setGraphData(initialGraphData);
         setLoadingArtist(null);
-    }, [initialArtist, initialGraphData]);
+    }, [initialArtist, initialGraphData, addLog]);
+
+    // Simulación estética de telemetría mientras el servidor procesa el catálogo de Spotify
+    useEffect(() => {
+        if (!loadingArtist) return;
+        const steps = [
+            { tag: 'DISCOGRAPHY', msg: `Querying catalog releases (album, single, appears_on)...`, delay: 350 },
+            { tag: 'BATCH_TRACKS', msg: `Chunking album tracklists in parallel batches of 20...`, delay: 850 },
+            { tag: 'COLLAB_PARSER', msg: `Parsing co-author metadata & deduplicating artist IDs...`, delay: 1400 },
+            { tag: 'GRAPH_CORE', msg: `Constructing adjacency list with Graphlib engine...`, delay: 2100 },
+        ];
+        const timers = steps.map(s => setTimeout(() => {
+            addLog(s.tag, s.msg, 'info');
+        }, s.delay));
+        return () => timers.forEach(t => clearTimeout(t));
+    }, [loadingArtist, addLog]);
 
     // --- Lógica de expansión, ahora vive aquí ---
     const handleExpandNode = async (nodeId: string) => {
-        // 1. Añadir el nodo clickeado a la lista de artistas seleccionados
-        setGraphData(prev => {
-            if (!prev) return null;
+        const node = graphData?.nodes.find(n => n.id === nodeId);
+        const artistName = node?.name || nodeId;
+        setExpandingArtistName(artistName);
 
-            // Buscar el nodo en los datos actuales
-            const node = prev.nodes.find(n => n.id === nodeId);
+        addLog('EXPAND_TARGET', `Expanding vertex: "${artistName}"`, 'accent', `Node ID: ${nodeId}`);
+        addLog('DISCOGRAPHY', `Querying albums and singles for "${artistName}"...`, 'info');
+
+        const timer1 = setTimeout(() => {
+            addLog('BATCH_TRACKS', `Scanning release tracklists for co-credits...`, 'info');
+        }, 500);
+        const timer2 = setTimeout(() => {
+            addLog('COLLAB_PARSER', `Resolving unlinked artist signatures...`, 'info');
+        }, 1200);
+
+        try {
+            const response = await fetch(`/api/collabs/${nodeId}`);
+            clearTimeout(timer1);
+            clearTimeout(timer2);
+            if (!response.ok) throw new Error("Failed to fetch collabs");
+            const { newNodes, newLinks } = await response.json();
+
+            setGraphData(prev => {
+                if (!prev) return null;
+                const existingNodeIds = new Set(prev.nodes.map(n => n.id));
+                const uniqueNewNodes = (newNodes || []).filter((n: Nodo) => !existingNodeIds.has(n.id));
+
+                const existingLinks = new Set(prev.links.map(l => `${l.source}-${l.target}`));
+                const uniqueNewLinks = (newLinks || []).filter((l: Arista) =>
+                    !existingLinks.has(`${l.source}-${l.target}`) &&
+                    !existingLinks.has(`${l.target}-${l.source}`)
+                );
+
+                const finalNodes = [...prev.nodes, ...uniqueNewNodes];
+                const finalLinks = [...prev.links, ...uniqueNewLinks];
+
+                addLog('DISCOVER', `Discovered +${uniqueNewNodes.length} new vertices and +${uniqueNewLinks.length} collaboration links`, 'success', uniqueNewNodes.length > 0 ? `Integrated: ${uniqueNewNodes.slice(0, 4).map((n: Nodo) => n.name).join(', ')}${uniqueNewNodes.length > 4 ? '...' : ''}` : 'All discovered collaborators already exist in topology');
+                addLog('MATRIX_UPDATE', `Total topology size: ${finalNodes.length} vertices, ${finalLinks.length} edges`, 'matrix');
+
+                return {
+                    nodes: finalNodes,
+                    links: finalLinks
+                };
+            });
+
+            // Añadir el nodo clickeado a la lista de artistas seleccionados
             if (node) {
-                // Convertir Nodo a Artist (Tienen estructura compatible en su mayoría)
-                // Aseguramos que tenga external_urls para evitar crash
                 const artistFromNode: Artist = {
                     id: node.id,
                     name: node.name,
@@ -65,66 +147,30 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                 };
 
                 setSelectedArtists(current => {
-                    // Evitar duplicados
                     if (current.find(a => a.id === nodeId)) {
-                        setExpandedArtistId(nodeId); // Si ya está, solo expandirlo
+                        setExpandedArtistId(nodeId);
                         return current;
                     }
-                    // Añadir al principio o al final? "bayan sumando" -> probably append to bottom for "timeline" feel, 
-                    // OR prepend to see it immediately at top. 
-                    // Let's prepend to keep it close to search, but user said "abajo, que se bayan sumando".
-                    // So append.
-                    setExpandedArtistId(nodeId); // Auto expand new one
-                    return [artistFromNode, ...current]; // Pongo arriba para ver rápido? 
-                    // "abajo, que se bayan sumando". -> `[...current, artistFromNode]`?
-                    // If I put it below, and the list is long, user might not see it.
-                    // But strictly user says "abajo". 
-                    // Actually, if I add to TOP, it pushes old ones down. This is usually better for "adding cards".
-                    // I will add to TOP `[new, ...old]` so it appears right under search. Use judgment. 
+                    setExpandedArtistId(nodeId);
+                    return [artistFromNode, ...current];
                 });
             }
 
-            return { ...prev, nodes: prev.nodes.map(n => n.id === nodeId ? { ...n, expanded: true } : n) };
-        });
-
-        const node = graphData?.nodes.find(n => n.id === nodeId);
-        if (node) {
-            setExpandingArtistName(node.name);
-        }
-
-        try {
-            // Hacemos un 'fetch' a nuestra propia API Route...
-            // de obtener datos desde un Componente de Cliente.
-            const response = await fetch(`/api/collabs/${nodeId}`);
-            if (!response.ok) throw new Error("Failed to fetch collabs");
-            const { newNodes, newLinks } = await response.json();
-
-            setGraphData(prev => {
-                if (!prev) return null;
-                const existingNodeIds = new Set(prev.nodes.map(n => n.id));
-                const uniqueNewNodes = (newNodes || []).filter((n: Nodo) => !existingNodeIds.has(n.id));
-
-                // Deduplicate edges: only add if neither direction exists
-                const existingLinks = new Set(prev.links.map(l => `${l.source}-${l.target}`));
-                const uniqueNewLinks = (newLinks || []).filter((l: Arista) =>
-                    !existingLinks.has(`${l.source}-${l.target}`) &&
-                    !existingLinks.has(`${l.target}-${l.source}`)
-                );
-
-                return {
-                    nodes: [...prev.nodes, ...uniqueNewNodes],
-                    links: [...prev.links, ...uniqueNewLinks]
-                };
-            });
+            // Pequeña pausa para que el usuario pueda apreciar el resultado antes de cerrar el modal
+            await new Promise(res => setTimeout(res, 500));
         } catch (error) {
+            clearTimeout(timer1);
+            clearTimeout(timer2);
             console.error("Error expanding node:", error);
+            addLog('ERROR', `Failed to expand vertex "${artistName}"`, 'warn');
         } finally {
             setExpandingArtistName(null);
         }
     };
 
     const handleRemoveNode = (nodeId: string) => {
-        // 1. Remove from selected list
+        const removed = selectedArtists.find(a => a.id === nodeId);
+        addLog('PRUNE_NODE', `Pruning vertex "${removed?.name || nodeId}" from active exploration`, 'warn');
         setSelectedArtists(prev => prev.filter(a => a.id !== nodeId));
         if (expandedArtistId === nodeId) setExpandedArtistId(null);
 
@@ -176,6 +222,12 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
 
     const handleLinkClick = (link: Arista) => {
         setSelectedCollab(link);
+        const sID = getID(link.source as any);
+        const tID = getID(link.target as any);
+        const sNode = graphData?.nodes.find(n => n.id === sID);
+        const tNode = graphData?.nodes.find(n => n.id === tID);
+        const tracks = link.tracks || [];
+        addLog('EDGE_INSPECT', `Connection inspected: "${sNode?.name || sID}" <--> "${tNode?.name || tID}"`, 'accent', `${tracks.length} shared track(s) recorded`);
     };
 
     // Helper to get ID whether source/target is string or object (d3 mutation)
@@ -190,6 +242,8 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                     <div className="flex-shrink-0 z-20">
                         <DebouncedSearch onSelectArtist={(artist) => {
                             setLoadingArtist({ id: artist.id, name: artist.name });
+                            addLog('QUERY_DISPATCH', `Target artist selected: "${artist.name}"`, 'accent', `ID: ${artist.id}`);
+                            addLog('SERVERLESS', 'Invoking Server Component pipeline to Spotify Graph API...', 'info');
                         }} />
                     </div>
 
@@ -230,45 +284,59 @@ export default function GraphContainer({ initialArtist, initialGraphData, query 
                 </div>
             </div>
 
-            {/* Help Panel */}
-            <div className="absolute bottom-5 right-5 z-10 pointer-events-auto">
+            {/* Bottom Controls: Graph Metrics + Help Panel */}
+            <div className="absolute bottom-5 right-5 z-20 flex items-center gap-2.5 pointer-events-auto">
+                <GraphMetrics
+                    nodes={graphData?.nodes || []}
+                    links={graphData?.links || []}
+                    isComputing={!!loadingArtist || !!expandingArtistName}
+                />
                 <HelpPanel />
             </div>
 
-            {/* Floating Toast: Expanding artist collabs */}
-            {expandingArtistName && (
-                <div className="absolute top-5 left-1/2 -translate-x-1/2 z-40 pointer-events-none transition-all duration-300">
-                    <div className="flex items-center gap-3 bg-[#18181b]/95 backdrop-blur-xl text-white text-xs px-4 py-2.5 rounded-full border border-white/15 shadow-2xl">
-                        <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-[#1DB954] rounded-full animate-spin"></div>
-                        <span>Explorando colaboraciones de <strong className="text-[#1DB954] font-semibold">{expandingArtistName}</strong>...</span>
-                    </div>
-                </div>
-            )}
-
-            {/* Fullscreen Overlay: Loading initial artist graph */}
-            {(loadingArtist || isLoading) && (
+            {/* Fullscreen Overlay: Loading initial artist graph OR expanding node */}
+            {(loadingArtist || expandingArtistName || isLoading) && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md transition-all duration-300">
-                    <div className="bg-[#18181b]/95 border border-white/10 p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-4 text-center max-w-sm mx-4 backdrop-blur-xl">
-                        <div className="relative flex items-center justify-center w-16 h-16">
-                            <div className="w-16 h-16 rounded-full border-2 border-white/10 border-t-[#1DB954] animate-spin"></div>
-                            <div className="absolute w-10 h-10 rounded-full bg-[#1DB954]/20 blur-md animate-pulse"></div>
-                            <div className="absolute w-3 h-3 rounded-full bg-[#1DB954]"></div>
+                    <div className="bg-[#121216]/95 border border-white/10 p-6 rounded-3xl shadow-2xl flex flex-col items-center gap-4 text-center w-[90%] max-w-md mx-4 backdrop-blur-xl font-mono">
+                        <div className="relative flex items-center justify-center w-14 h-14">
+                            <div className="w-14 h-14 rounded-full border-2 border-white/10 border-t-[#1DB954] animate-spin"></div>
+                            <div className="absolute w-8 h-8 rounded-full bg-[#1DB954]/20 blur-md animate-pulse"></div>
+                            <div className="absolute w-2.5 h-2.5 rounded-full bg-[#1DB954]"></div>
                         </div>
 
-                        <div className="space-y-1.5">
-                            <h3 className="text-base font-semibold text-white tracking-wide">
-                                Generando red musical
+                        <div className="space-y-1">
+                            <h3 className="text-sm font-bold text-white tracking-wider uppercase flex items-center justify-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#1DB954] animate-ping"></span>
+                                {expandingArtistName ? "AMPLIANDO RED DE COLABORACIONES" : "GENERANDO RED TOPOLÓGICA"}
                             </h3>
-                            <p className="text-xs text-white/60 leading-relaxed">
-                                {loadingArtist ? (
+                            <p className="text-xs text-white/60">
+                                {expandingArtistName ? (
                                     <>
-                                        Obteniendo colaboraciones de{" "}
-                                        <span className="text-[#1DB954] font-medium">{loadingArtist.name}</span>...
+                                        Artista: <span className="text-[#1DB954] font-semibold">{expandingArtistName}</span>
+                                    </>
+                                ) : loadingArtist ? (
+                                    <>
+                                        Artista: <span className="text-[#1DB954] font-semibold">{loadingArtist.name}</span>
                                     </>
                                 ) : (
-                                    "Analizando álbumes y pistas..."
+                                    "Analizando colaboraciones en Spotify..."
                                 )}
                             </p>
+                        </div>
+
+                        {/* Mini Live Logs Feed in Loading Modal */}
+                        <div className="w-full bg-black/60 border border-white/10 rounded-xl p-3 text-left space-y-1 max-h-32 overflow-hidden shadow-inner">
+                            <div className="flex items-center justify-between text-[9px] text-white/30 pb-1 border-b border-white/5">
+                                <span>PROCESO_EN_VIVO</span>
+                                <span className="text-[#1DB954] font-semibold animate-pulse">ACTIVO</span>
+                            </div>
+                            {logs.slice(-4).map(l => (
+                                <div key={l.id} className="text-[10px] truncate leading-tight flex items-center gap-1.5">
+                                    <span className="text-[#1DB954] font-bold">&gt;</span>
+                                    <span className="text-white/40 text-[9px]">[{l.tag}]</span>
+                                    <span className="text-white/80">{l.message}</span>
+                                </div>
+                            ))}
                         </div>
 
                         {/* Indeterminate progress bar */}
