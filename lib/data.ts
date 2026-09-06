@@ -36,17 +36,16 @@ async function getToken(): Promise<String> {
 }
 
 
-export async function searchArtist(req: string): Promise<ArtistsResponse> {
+export async function searchArtist(req: string, limit: number = 8): Promise<ArtistsResponse> {
 
     const token = await getToken();
-    const response = await fetch(`https://api.spotify.com/v1/search?q=${req}&type=artist`, {
+    const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(req)}&type=artist&limit=${limit}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
         next: { revalidate: 86400 }
     });
-    return response.json()
-
+    return response.json();
 }
 
 // Deprecado en la API

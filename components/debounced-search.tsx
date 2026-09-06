@@ -8,36 +8,60 @@ import { Search } from 'lucide-react';
 import Image from 'next/image';
 import { Artist } from '@/lib/definiciones';
 
-export default function DebouncedSearch() {
+interface DebouncedSearchProps {
+    onSelectArtist?: (artist: Artist) => void;
+}
+
+export default function DebouncedSearch({ onSelectArtist }: DebouncedSearchProps = {}) {
     const router = useRouter();
     const [term, setTerm] = useState('');
     const [results, setResults] = useState<Artist[]>([]);
     const [loading, setLoading] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
 
-    // Debounce logic
+    // Debounce logic (250ms for snappy response)
     useEffect(() => {
-        const timer = setTimeout(async () => {
-            if (term.length > 2) {
-                setLoading(true);
-                try {
-                    const res = await fetch(`/api/search-proxy?q=${encodeURIComponent(term)}`);
-                    const data = await res.json();
-                    setResults(data.artists || []);
-                    setShowDropdown(true);
-                } catch (err) {
-                    console.error(err);
-                } finally {
-                    setLoading(false);
-                }
-            } else {
-                setResults([]);
-                setShowDropdown(false);
+        const trimmed = term.trim();
+        if (trimmed.length < 2) {
+            setResults([]);
+            setShowDropdown(false);
+            setLoading(false);
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
             }
-        }, 500); // 500ms debounce
+            return;
+        }
 
-        return () => clearTimeout(timer);
+        setLoading(true);
+        const timer = setTimeout(async () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+            const controller = new AbortController();
+            abortControllerRef.current = controller;
+
+            try {
+                const res = await fetch(`/api/search-proxy?q=${encodeURIComponent(trimmed)}`, {
+                    signal: controller.signal
+                });
+                if (!res.ok) throw new Error("Search failed");
+                const data = await res.json();
+                setResults(data.artists || []);
+                setShowDropdown(true);
+            } catch (err: any) {
+                if (err?.name !== 'AbortError') {
+                    console.error("Search error:", err);
+                }
+            } finally {
+                setLoading(false);
+            }
+        }, 250); // 250ms debounce for much faster response
+
+        return () => {
+            clearTimeout(timer);
+        };
     }, [term]);
 
     // Click outside to close
@@ -52,10 +76,19 @@ export default function DebouncedSearch() {
     }, [wrapperRef]);
 
     const handleSelect = (artist: Artist) => {
-        // Navigate by ID for precision
-        router.push(`/?id=${artist.id}`); // This requires page.tsx update
+        if (onSelectArtist) {
+            onSelectArtist(artist);
+        }
         setShowDropdown(false);
-        setTerm(''); // Optional: clear or keep name
+        setTerm('');
+        router.push(`/?id=${artist.id}`);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && results.length > 0 && showDropdown) {
+            e.preventDefault();
+            handleSelect(results[0]);
+        }
     };
 
     return (
@@ -73,15 +106,16 @@ export default function DebouncedSearch() {
                     type="text"
                     value={term}
                     onChange={(e) => setTerm(e.target.value)}
-                    onFocus={() => term.length > 2 && setShowDropdown(true)}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => term.trim().length >= 2 && setShowDropdown(true)}
                     placeholder="Buscar artista..."
-                    className="w-full bg-[#18181b]/90 backdrop-blur-md text-white border border-white/10 rounded-2xl px-4 py-2.5 pl-10 focus:outline-none focus:border-[#1DB954] focus:ring-1 focus:ring-[#1DB954] transition-all shadow-lg placeholder:text-white/20 text-sm"
+                    className="w-full bg-[#18181b]/90 backdrop-blur-md text-white border border-white/10 rounded-2xl px-4 py-2.5 pl-10 pr-9 focus:outline-none focus:border-[#1DB954] focus:ring-1 focus:ring-[#1DB954] transition-all shadow-lg placeholder:text-white/20 text-sm"
                 />
                 <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" />
 
                 {loading && (
-                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                        <div className="animate-spin h-3 w-3 border-2 border-white/20 border-t-white rounded-full"></div>
+                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                        <div className="animate-spin h-3.5 w-3.5 border-2 border-white/20 border-t-[#1DB954] rounded-full"></div>
                     </div>
                 )}
             </div>
