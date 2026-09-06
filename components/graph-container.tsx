@@ -11,6 +11,15 @@ import HelpPanel from "@/components/help-panel";
 import GraphMetrics from "@/components/graph-metrics";
 import { Nodo, Arista, Artist } from "@/lib/definiciones";
 
+export interface LogEntry {
+    id: string;
+    timestamp: string;
+    tag: string;
+    message: string;
+    level?: 'info' | 'success' | 'warn' | 'accent' | 'matrix';
+    detail?: string;
+}
+
 // Props que recibe del Server Component
 interface GraphContainerProps {
     initialArtist: Artist | null;
