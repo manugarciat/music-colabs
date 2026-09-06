@@ -233,10 +233,15 @@ function GraphForce({ nodes, links, onNodeClick, onHover, onLinkClick, onHoverLi
 
                 // Link Interaction
                 linkColor={(link: Arista) => {
-                    if (link === hoveredLink) return '#ffffff'; // White on hover
-                    return 'rgba(255,255,255,0.5)'; // Transparent base
+                    if (link === hoveredLink) return '#1DB954'; // Spotify green on hover
+                    return 'rgba(255,255,255,0.45)'; // Visible base
                 }}
-                linkWidth={(link: Arista) => link === hoveredLink ? 0.7 : 0.5}
+                linkWidth={(link: Arista) => {
+                    if (link === hoveredLink) return 3.5;
+                    const trackCount = link.tracks?.length || 1;
+                    return Math.min(3.0, 1.8 + (trackCount * 0.25)); // Base de 1.8 a 3.0 según colaboraciones
+                }}
+                linkHoverPrecision={6} // Hitbox ampliado para hacer clic y hover con mucha facilidad
                 onLinkClick={(link) => onLinkClick && onLinkClick(link as Arista)}
                 onLinkHover={(link) => onHoverLink && onHoverLink(link as Arista || null)}
 
